@@ -28,26 +28,25 @@ Adafruit_BME280 bme; // I2C
 
 unsigned long delayTime;
 
-void printValues() {
-    Serial.print("Temperature = ");
-    Serial.print(bme.readTemperature());
-    Serial.println(" °C");
-
-    Serial.print("Pressure = ");
-
-    Serial.print(bme.readPressure() / 100.0F);
-    Serial.println(" hPa");
-
-    Serial.print("Approx. Altitude = ");
-    Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    Serial.println(" m");
-
-    Serial.print("Humidity = ");
-    Serial.print(bme.readHumidity());
-    Serial.println(" %");
-
-    Serial.println();
-}
+//void printValues() {
+//    Serial.print("Temperature = ");
+//    Serial.print(bme.readTemperature());
+//    Serial.println(" °C");
+//
+//    // Serial.print("Pressure = ");
+//    // Serial.print(bme.readPressure() / 100.0F);
+//    // Serial.println(" hPa");
+//
+//    // Serial.print("Approx. Altitude = ");
+//    // Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+//    // Serial.println(" m");
+//
+//    // Serial.print("Humidity = ");
+//    // Serial.print(bme.readHumidity());
+//    // Serial.println(" %");
+//
+//    Serial.println();
+//}
 
 void setup() {
     Serial.begin(9600);
@@ -55,10 +54,8 @@ void setup() {
     Serial.println(F("BME280 test"));
 
     unsigned status;
-
-    delay(2000);
     
-    // default settings
+    //// default settings
     status = bme.begin(0x76);  
     // You can also pass in a Wire library object like &Wire2
     // status = bme.begin(0x76, &Wire2)
@@ -73,13 +70,13 @@ void setup() {
     }
     
     Serial.println("-- Default Test --");
-    delayTime = 1000;
+    //delayTime = 1000;
 
-    Serial.println();
+    //Serial.println();
 }
 
 
 void loop() { 
-    printValues();
+    //printValues();
     delay(delayTime);
 }
