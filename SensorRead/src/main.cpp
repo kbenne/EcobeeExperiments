@@ -66,7 +66,7 @@ void setup() {
         Serial.println("BME280 Found");
     }
     
-    //delayTime = 1000;
+    delayTime = 2000;
 
     //Serial.println();
 }
