@@ -24,7 +24,7 @@ int16_t dig_T3() {
 
 // Return adc_T (the raw sensor reading) given temperature T in degC
 // This solves the quadratic equation given in Appendix 8.1 in the BME datasheet
-int32_t adc_T(double &T) {
+int32_t adc_T(const double &T) {
   const double T1 = dig_T1();
   const double T2 = dig_T2();
   const double T3 = dig_T3();
@@ -49,7 +49,7 @@ int32_t adc_T(double &T) {
   return (int32_t)result << 4;
 }
 
-void set_T(double T) {
+void set_T(const double &T) {
   const int32_t adc_T_value = adc_T(T);
 
   // BME280_REGISTER_TEMPDATA is the most significant digit
