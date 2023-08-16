@@ -130,6 +130,8 @@ void http_not_found_endpoint(){
 }
 
 void setup() {
+  Serial.begin(9600);
+
   initRegisters();
 
   // Set T in degress C and the emulator will communicate this value
@@ -138,6 +140,8 @@ void setup() {
 
   Wire.onReceive(on_wire_receive);
   Wire.onRequest(on_wire_request);
+  Wire.begin(0x76); // This is the I2C address of a BME280
+  Serial.println("I2C Wire protocol started");
 
   const auto status = WiFi.begin(ssid, pass);
   if ( status != WL_CONNECTED) {
@@ -148,15 +152,10 @@ void setup() {
     Serial.println(ip);
   }
 
-  delay(1000);
-
   server.on("/api", http_api_endpoint);
   server.onNotFound(http_not_found_endpoint);
   server.begin();
   Serial.println("HTTP server started");
-
-  Wire.begin(0x76); // This is the I2C address of a BME280
-  Serial.begin(9600);
 }
 
 void loop() {
