@@ -1,8 +1,13 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <WiFi.h>
+#include <WebServer.h>
 #include "registers.hpp"
 
 byte Address;
+WebServer server(80);
+constexpr char ssid[] = EMBEDDED_SSID; //  your network SSID
+constexpr char pass[] = EMBEDDED_PASS; //  your network password
 
 // Calibration terms are composed of two bytes.
 // The first register is the least significant digit.
@@ -58,7 +63,7 @@ void set_T(const double &T) {
   Registers[BME280_REGISTER_TEMPDATA + 2] = adc_T_value;
 }
 
-void onReceiveHandler(int numBytes) {
+void on_wire_receive(int numBytes) {
   Serial.println("onRequestHandler received data");
   int byteCount = 0;
 
@@ -86,7 +91,7 @@ void onReceiveHandler(int numBytes) {
   }
 }
 
-void onRequestHandler(void) {
+void on_wire_request(void) {
   Serial.print("onReceiveHandler got a request and the Address is currently ");
   Serial.print(Address, HEX);
   Serial.println(".");
@@ -101,6 +106,29 @@ void onRequestHandler(void) {
   }
 }
 
+void http_api_endpoint() {
+  const auto method = server.method();
+  if (method == HTTP_GET) {
+    // Need to either cash the current T, or implement the calibration function
+    // to get it back out of the adc_T.
+    server.send(200, "text/plain", "Not implemented"); 
+  } else if (method == HTTP_PUT) {
+    if (server.hasArg("temperature")) {
+      const auto value = server.arg("temperature");
+      const double new_temp = value.toDouble();
+      set_T(new_temp);
+      server.send(200); 
+    }
+    server.send(400, "text/plain", "Bad request");
+  } else {
+    server.send(405, "text/plain", "Method not allowed");
+  }
+}
+
+void http_not_found_endpoint(){
+  server.send(404, "text/plain", "Not found");
+}
+
 void setup() {
   initRegisters();
 
@@ -108,16 +136,29 @@ void setup() {
   // over I2C as if connected to a normal BME280
   set_T(28.13);
 
-  Wire.onReceive(onReceiveHandler);
-  Wire.onRequest(onRequestHandler);
+  Wire.onReceive(on_wire_receive);
+  Wire.onRequest(on_wire_request);
 
-  Wire.begin(0x76);
+  const auto status = WiFi.begin(ssid, pass);
+  if ( status != WL_CONNECTED) {
+    Serial.println("Could not connect to wireless network");
+  } else {
+    const auto ip = WiFi.localIP();
+    Serial.print("IP address is: ");
+    Serial.println(ip);
+  }
+
+  delay(1000);
+
+  server.on("/api", http_api_endpoint);
+  server.onNotFound(http_not_found_endpoint);
+  server.begin();
+  Serial.println("HTTP server started");
+
+  Wire.begin(0x76); // This is the I2C address of a BME280
   Serial.begin(9600);
-
-  Serial.println();
-
 }
 
 void loop() {
-    delay(2000);
+  server.handleClient();
 }
