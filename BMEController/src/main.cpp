@@ -33,19 +33,40 @@ void printValues() {
     Serial.print(bme.readTemperature());
     Serial.println(" °C");
 
-    // Serial.print("Pressure = ");
-    // Serial.print(bme.readPressure() / 100.0F);
-    // Serial.println(" hPa");
+    Serial.print("Pressure = ");
+    Serial.print(bme.readPressure() / 100.0F);
+    Serial.println(" hPa");
 
     // Serial.print("Approx. Altitude = ");
     // Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
     // Serial.println(" m");
 
-    // Serial.print("Humidity = ");
-    // Serial.print(bme.readHumidity());
-    // Serial.println(" %");
+    Serial.print("Humidity = ");
+    Serial.print(bme.readHumidity());
+    Serial.println(" %");
 
     Serial.println();
+
+    Serial.print("dig_H1: ");
+    Serial.println(bme._bme280_calib.dig_H1, HEX);
+    Serial.print("dig_H2: ");
+    Serial.println(bme._bme280_calib.dig_H2, HEX);
+    Serial.print("dig_H3: ");
+    Serial.println(bme._bme280_calib.dig_H3, HEX);
+    Serial.print("dig_H4: ");
+    Serial.println(bme._bme280_calib.dig_H4, HEX);
+    Serial.print("dig_H5: ");
+    Serial.println(bme._bme280_calib.dig_H5, HEX);
+    Serial.print("dig_H6: ");
+    Serial.println(bme._bme280_calib.dig_H6, HEX);
+    Serial.print("t_fine: ");
+    Serial.println(bme.t_fine, HEX);
+    Serial.print("adc_T: ");
+    Serial.println(bme.read24(BME280_REGISTER_TEMPDATA), HEX);
+    Serial.print("adc_P: ");
+    Serial.println(bme.read24(BME280_REGISTER_PRESSUREDATA), HEX);
+    Serial.print("adc_H: ");
+    Serial.println(bme.read16(BME280_REGISTER_HUMIDDATA), HEX);
 }
 
 void setup() {
