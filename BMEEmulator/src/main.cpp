@@ -57,13 +57,31 @@ uint8_t dig_H6() {
   return Registers[BME280_REGISTER_DIG_H6];
 }
 
-double solve_quadratic(const double &a, const double &b, const double &c) {
+enum class Root { Min, Max };
+
+double solve_quadratic(const double &a, const double &b, const double &c, Root root) {
   // a * x ** 2 + b * x + c = 0, return max x
   const double discriminant = pow(b, 2.0) - 4.0 * a * c;
 
   if ( discriminant > 0) {
     const double square_root = sqrt(discriminant);
-    return fmax((-b + square_root) / (2.0 * a), (-b - square_root) / (2.0 * a));
+    if (root == Root::Min) {
+      return fmin((-b + square_root) / (2.0 * a), (-b - square_root) / (2.0 * a));
+    } else {
+      return fmax((-b + square_root) / (2.0 * a), (-b - square_root) / (2.0 * a));
+    }
+  } else {
+    return -b / (2.0 * a);
+  }
+}
+
+double solve_quadratic_min(const double &a, const double &b, const double &c) {
+  // a * x ** 2 + b * x + c = 0, return max x
+  const double discriminant = pow(b, 2.0) - 4.0 * a * c;
+
+  if ( discriminant > 0) {
+    const double square_root = sqrt(discriminant);
+    return fmin((-b + square_root) / (2.0 * a), (-b - square_root) / (2.0 * a));
   } else {
     return -b / (2.0 * a);
   }
@@ -80,7 +98,7 @@ void set_T(const double &T) {
   const double b = (T2 / 16384.0) - (2.0 * T1 * T3 / 131072.0 / 8192.0);
   const double c = (pow(T1 / 8192.0, 2.0) * T3) - (T1 * T2 / 1024.0) - (T * 5120.0);
 
-  const double result = solve_quadratic(a, b, c);
+  const double result = solve_quadratic(a, b, c, Root::Max);
 
   // The four least significant digits are not used by the TEMPDATA register
   // so shift 4 digits to the left
@@ -110,15 +128,13 @@ int32_t t_fine() {
   return var1 + var2;
 }
 
-
 void set_H(double H) {
-  // TODO There is a math error in this function
-  // Review datasheet and correct
   if (H > 100.0)
      H = 100.0;
   else if (H < 0.0)
      H = 0.0;
-
+  
+  const double t_fine_double = t_fine();
   const double h1 = dig_H1();
   const double h2 = dig_H2();
   const double h3 = dig_H3();
@@ -126,25 +142,22 @@ void set_H(double H) {
   const double h5 = dig_H5();
   const double h6 = dig_H6();
 
-  const double t_fine_double = t_fine();
   const double c1 = t_fine_double - 76800.0;
-  const double c2 = h4 * 64.0 + h5 / 16384.0 * c1;
-  const double c3 = 1.0 + h6 / 67108864.0 * c1 * (1.0 + h3 / 67108864.0 * c1);
-  const double c4 = h2 / 65536.0;
-  const double c5 = c4 * c3;
-  const double c6 = c2 * c5;
-  const double c7 = h1  / 524288.0;
-  const double c8 = -1.0;
-  const double c9 = H;
+  const double c2 = (h4 * 64.0 + h5 / 16384.0 * c1);
+  const double c3 = (h2 / 65536.0 * (1.0 + h6 / 67108864.0 * c1 * (1.0 + h3 / 67108864.0 * c1)));
+  const double c4 = c2 * c3;
   
-  // a * x ** 2 + b * x + c = 0
-  // x = adc_H * c5 - c6;
-  const double a = c7;
-  const double b = c8;
-  const double c = c9;
+  // H = x - dig_H1 / 524288.0 * pow(x, 2)
+  // Where x = ((adcH * c3) - c4)
+  // Therefore
+  // -1 * dig_H1 / 524288.0 * pow(x, 2) + x - H = 0;
   
-  const double x = solve_quadratic(a, b, c);
-  const int32_t adc_H = (x + c6) / c5;
+  const double a = -1.0 * h1 / 524288.0;
+  const double b = 1.0;
+  const double c = -1.0 * H;
+  const double x = solve_quadratic(a, b, c, Root::Min);
+  
+  const int32_t adc_H = (x + c4) / c3;
 
   Registers[BME280_REGISTER_HUMIDDATA] = adc_H >> 8;
   Registers[BME280_REGISTER_HUMIDDATA + 1] = adc_H;
@@ -193,17 +206,37 @@ void on_wire_request(void) {
   }
 }
 
-void http_api_endpoint() {
+// TODO: Reduce code duplication in endpoints
+void http_temperature_endpoint() {
   const auto method = server.method();
   if (method == HTTP_GET) {
     // Need to either cash the current T, or implement the calibration function
     // to get it back out of the adc_T.
     server.send(200, "text/plain", "Not implemented"); 
   } else if (method == HTTP_PUT) {
-    if (server.hasArg("temperature")) {
-      const auto value = server.arg("temperature");
+    if (server.hasArg("value")) {
+      const auto value = server.arg("value");
       const double new_temp = value.toDouble();
       set_T(new_temp);
+      server.send(200); 
+    }
+    server.send(400, "text/plain", "Bad request");
+  } else {
+    server.send(405, "text/plain", "Method not allowed");
+  }
+}
+
+void http_humidity_endpoint() {
+  const auto method = server.method();
+  if (method == HTTP_GET) {
+    // Need to either cash the current T, or implement the calibration function
+    // to get it back out of the adc_T.
+    server.send(200, "text/plain", "Not implemented"); 
+  } else if (method == HTTP_PUT) {
+    if (server.hasArg("value")) {
+      const auto value = server.arg("value");
+      const double new_h = value.toDouble();
+      set_H(new_h);
       server.send(200); 
     }
     server.send(400, "text/plain", "Bad request");
@@ -246,33 +279,13 @@ void setup() {
     Serial.println(ip);
   }
 
-  server.on("/api", http_api_endpoint);
+  server.on("/api/temperature", http_temperature_endpoint);
+  server.on("/api/humidity", http_humidity_endpoint);
   server.onNotFound(http_not_found_endpoint);
   server.begin();
   Serial.println("HTTP server started");
 }
 
 void loop() {
-  delay(2000);
-
-  //Serial.print("dig_H1: ");
-  //Serial.println(dig_H1(), HEX);
-  //Serial.print("dig_H2: ");
-  //Serial.println(dig_H2(), HEX);
-  //Serial.print("dig_H3: ");
-  //Serial.println(dig_H3(), HEX);
-  //Serial.print("dig_H4: ");
-  //Serial.println(dig_H4(), HEX);
-  //Serial.print("dig_H5: ");
-  //Serial.println(dig_H5(), HEX);
-  //Serial.print("dig_H6: ");
-  //Serial.println(dig_H6(), HEX);
-
-  //Serial.print("t_fine: ");
-  //Serial.println(t_fine(), HEX);
-
-  //Serial.print("adc_T: ");
-  //Serial.println(adc_T(), HEX);
-
   server.handleClient();
 }
