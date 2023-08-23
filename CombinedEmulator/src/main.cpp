@@ -12,8 +12,10 @@ constexpr char ssid[] = EMBEDDED_SSID; //  your network SSID
 constexpr char pass[] = EMBEDDED_PASS; //  your network password
 
 void set_T(const double &T) {
-  sht::set_T(T);
-  bme::set_T(T);
+  double T_adjusted = (T + 4.3766) / 0.9861;
+
+  sht::set_T(T_adjusted);
+  bme::set_T(T_adjusted);
 }
 
 void set_H(const double &H) {
@@ -68,9 +70,12 @@ void setup() {
   Serial.begin(9600);
 
   sht::init();
-  sht::begin();
-
   bme::init();
+
+  set_T(22.0);
+  set_H(50.0);
+
+  sht::begin();
   bme::begin();
 
   const auto status = WiFi.begin(ssid, pass);

@@ -24,21 +24,16 @@ void begin() {
 // Set the raw sensor reading (adc_T) given temperature T in degC
 // This solves the quadratic equation given in Appendix 8.1 in the BME datasheet
 void set_T(const double &T) {
-  // This is an ecobee specific adjustment that should get the display to
-  // nearly match the value provided by the sensor
-  double T_adjusted = T; //(T + 4.3766) / 0.9861;
   // This is the function provided by the datasheet
-  TemperatureRegister = (T_adjusted + 45) * (pow(2, 16) - 1) / 175;
+  TemperatureRegister = (T + 45) * (pow(2, 16) - 1) / 175;
 }
 
 double get_T(void) {
-  double T_adjusted = TemperatureRegister * 175 / (pow(2, 16) - 1) - 45;
-  return T_adjusted; // * 0.9861 - 4.3766;
+  return TemperatureRegister * 175 / (pow(2, 16) - 1) - 45;
 }
 
 void set_H(const double &H) {
-  double H_adjusted = H; // TODO need a humidity correction curve as function of H AND T
-  HumidityRegister = (H_adjusted + 6) * (pow(2, 16) - 1) / 125;
+  HumidityRegister = (H + 6) * (pow(2, 16) - 1) / 125;
 }
 
 bool is_measure_command(int16_t command) {
