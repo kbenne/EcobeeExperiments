@@ -9,6 +9,9 @@ void init() {
   set_T(22.0);
   set_H(50.0);
 
+  Wire.setSDA(16);
+  Wire.setSCL(17);
+
   Wire.onReceive(on_wire_receive);
   Wire.onRequest(on_wire_request);
 }
