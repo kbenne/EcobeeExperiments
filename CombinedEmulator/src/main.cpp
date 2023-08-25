@@ -10,17 +10,29 @@
 WebServer server(80);
 constexpr char ssid[] = EMBEDDED_SSID; //  your network SSID
 constexpr char pass[] = EMBEDDED_PASS; //  your network password
+double T_store;
+double H_store;
 
 void set_T(const double &T) {
-  double T_adjusted = (T + 4.3766) / 0.9861;
+  T_store = T;
+  double T_adjusted = (T_store + 4.3766) / 0.9861;
 
   sht::set_T(T_adjusted);
   bme::set_T(T_adjusted);
 }
 
 void set_H(const double &H) {
-  sht::set_H(H);
-  bme::set_H(H);
+  H_store = H;
+
+  constexpr double a = 0.740036139896326;
+  constexpr double b = -0.0017671331702309168;
+  constexpr double c = 0.0005783465707743796;
+  constexpr double d = 0.05096062356332354;
+
+  double H_adjusted = a * H_store + b * T_store + c * H_store * T_store + d;
+
+  sht::set_H(H_adjusted);
+  bme::set_H(H_adjusted);
 }
 
 // TODO: Reduce code duplication in endpoints
