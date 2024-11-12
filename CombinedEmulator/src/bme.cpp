@@ -150,7 +150,7 @@ void set_H(double H) {
 }
 
 void on_wire_receive(int numBytes) {
-  Serial.println("onRequestHandler received data");
+  //Serial.println("onRequestHandler received data");
   int byteCount = 0;
 
   while (Wire.available()) {
@@ -161,15 +161,15 @@ void on_wire_receive(int numBytes) {
     // value to write. If only a single bit is received, then we should expect a read
     // request. (See onRequestHandler)
     if((byteCount % 2) == 0) {
-      Serial.print("Setting Address ");
-      Serial.println(rxByte, HEX);
+      //Serial.print("Setting Address ");
+      //Serial.println(rxByte, HEX);
       Address = rxByte;
     } else {
       // TODO Protect read only registers
-      Serial.print("Setting Register at Address ");
-      Serial.print(Address, HEX);
-      Serial.print(" to ");
-      Serial.println(rxByte, HEX);
+      //Serial.print("Setting Register at Address ");
+      //Serial.print(Address, HEX);
+      //Serial.print(" to ");
+      //Serial.println(rxByte, HEX);
       Registers[Address] = rxByte;
     }
 
@@ -178,9 +178,9 @@ void on_wire_receive(int numBytes) {
 }
 
 void on_wire_request(void) {
-  Serial.print("onReceiveHandler got a request and the Address is currently ");
-  Serial.print(Address, HEX);
-  Serial.println(".");
+  //Serial.print("onReceiveHandler got a request and the Address is currently ");
+  //Serial.print(Address, HEX);
+  //Serial.println(".");
 
   // The Wire API does not tell us how many bytes were requested
   // so the fastest and safest thing to do is to fill the buffer with the entire register

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ArduinoJson.h>
 
 // This is a combined BME and SHT emulator
 // This used both Wire and Wire1 interfaces available on the Pico
@@ -79,7 +80,15 @@ void http_not_found_endpoint(){
 }
 
 void setup() {
+  pinMode(0, INPUT_PULLDOWN);
+  pinMode(1, INPUT_PULLDOWN);
+  pinMode(2, INPUT_PULLDOWN);
+
   Serial.begin(9600);
+
+  Serial1.setTX(12);  // Set TX pin to GPIO 12 
+  Serial1.setRX(13);  // Set RX pin to GPIO 13 
+  Serial1.begin(115200);
 
   sht::init();
   bme::init();
@@ -91,6 +100,7 @@ void setup() {
   bme::begin();
 
   const auto status = WiFi.begin(ssid, pass);
+
   if ( status != WL_CONNECTED) {
     Serial.println("Could not connect to wireless network");
   } else {
@@ -106,6 +116,77 @@ void setup() {
   Serial.println("HTTP server started");
 }
 
+static unsigned long last_refresh_ = 0;
+static const unsigned long refresh_interval_ = 3000;
+static char buffer_[40];
+static char io0_;
+static char io1_;
+static char io2_;
+
 void loop() {
   server.handleClient();
+
+  auto input0 = digitalRead(0);
+  auto input1 = digitalRead(1);
+  auto input2 = digitalRead(2);
+
+  // This is the condition to flag for sending new input values to the client
+  bool stale_inputs{false};
+
+  // A timeout will trigger stale_inputs
+  if ( millis() - last_refresh_ >= refresh_interval_ ) {
+    stale_inputs = true;
+  }
+
+  // If any of the cached values change, that will also trigger stale_inputs
+  if ( input0 != io0_ ||
+       input1 != io1_ ||
+       input2 != io2_
+  ) {
+    stale_inputs = true;
+  }
+
+  if ( stale_inputs ) {
+    io0_ = input0;
+    io1_ = input1;
+    io2_ = input2;
+
+    sprintf(buffer_, "{'input0': %d, 'input1': %d, 'input2': %d}",input0, input1, input2);
+
+    Serial.print("Sending: ");
+    Serial.println(buffer_);
+
+    Serial1.println(buffer_);
+
+    last_refresh_ = millis();
+    stale_inputs = false;
+  }
+
+  if (Serial1.available() > 0) {
+    JsonDocument doc;
+    auto error = deserializeJson(doc, Serial1);
+
+    if ( error ) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+
+    Serial.print("Received: ");
+    serializeJson(doc, Serial);
+    Serial.println();
+
+    const auto temperature = doc["temperature"];
+    if (temperature.is<double>()) {
+      sprintf(buffer_, "Setting temperature to: %.2f}", temperature.as<double>());
+      Serial.println(buffer_);
+      set_T(temperature.as<double>());
+    }
+    const auto humidity = doc["humidity"];
+    if (humidity.is<double>()) {
+      sprintf(buffer_, "Setting humidity to: %.2f}", humidity.as<double>());
+      Serial.println(buffer_);
+      set_H(humidity.as<double>());
+    }
+  }
 }

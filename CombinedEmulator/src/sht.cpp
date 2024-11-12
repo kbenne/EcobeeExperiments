@@ -84,7 +84,7 @@ void eval_command(int16_t command) {
 }
 
 void on_wire_receive(int num_bytes) {
-  Serial.println("Begin on_wire_receive");
+  //Serial.println("Begin on_wire_receive");
 
   if (num_bytes == 1) {
     int index = 0;
@@ -101,8 +101,8 @@ void on_wire_receive(int num_bytes) {
     // Second byte in the command is the last significant digit
     eval_command(Command);
 
-    Serial.print("Received command ");
-    Serial.println(Command, HEX);
+    //Serial.print("Received command ");
+    //Serial.println(Command, HEX);
   } else {
     Serial.print("One byte was expected, but received ");
     Serial.print(num_bytes, 0);
@@ -110,13 +110,13 @@ void on_wire_receive(int num_bytes) {
     Command = 0x0;
   }
 
-  Serial.println("End on_wire_receive");
+  //Serial.println("End on_wire_receive");
 }
 
 void on_wire_request(void) {
-  Serial.println("Begin on_wire_request");
-  Serial.print("Current Command: ");
-  Serial.println(Command, HEX);
+  //Serial.println("Begin on_wire_request");
+  //Serial.print("Current Command: ");
+  //Serial.println(Command, HEX);
 
   if (is_measure_command(Command)) {
     byte data[6];
@@ -131,7 +131,7 @@ void on_wire_request(void) {
     Wire1.write(SerialNumber, 6);
   }
 
-  Serial.println("End on_wire_request");
+  //Serial.println("End on_wire_request");
 }
 
 void init_serial_number() {
