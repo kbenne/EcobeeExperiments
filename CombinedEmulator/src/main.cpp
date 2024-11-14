@@ -123,6 +123,27 @@ static char io0_;
 static char io1_;
 static char io2_;
 
+void handle_serial_input(HardwareSerial &serial) {
+  if (serial.available() > 0) {
+    JsonDocument doc;
+    auto error = deserializeJson(doc, serial);
+
+    if ( error ) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+    } else {
+      const auto temperature = doc["temperature"];
+      if (temperature.is<double>()) {
+        set_T(temperature.as<double>());
+      }
+      const auto humidity = doc["humidity"];
+      if (humidity.is<double>()) {
+        set_H(humidity.as<double>());
+      }
+    }
+  }
+}
+
 void loop() {
   server.handleClient();
 
@@ -151,42 +172,15 @@ void loop() {
     io1_ = input1;
     io2_ = input2;
 
-    sprintf(buffer_, "{'input0': %d, 'input1': %d, 'input2': %d}",input0, input1, input2);
+    sprintf(buffer_, "{\"input0\": %d, \"input1\": %d, \"input2\": %d}",input0, input1, input2);
 
-    Serial.print("Sending: ");
     Serial.println(buffer_);
-
     Serial1.println(buffer_);
 
     last_refresh_ = millis();
     stale_inputs = false;
   }
 
-  if (Serial1.available() > 0) {
-    JsonDocument doc;
-    auto error = deserializeJson(doc, Serial1);
-
-    if ( error ) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
-    }
-
-    Serial.print("Received: ");
-    serializeJson(doc, Serial);
-    Serial.println();
-
-    const auto temperature = doc["temperature"];
-    if (temperature.is<double>()) {
-      sprintf(buffer_, "Setting temperature to: %.2f}", temperature.as<double>());
-      Serial.println(buffer_);
-      set_T(temperature.as<double>());
-    }
-    const auto humidity = doc["humidity"];
-    if (humidity.is<double>()) {
-      sprintf(buffer_, "Setting humidity to: %.2f}", humidity.as<double>());
-      Serial.println(buffer_);
-      set_H(humidity.as<double>());
-    }
-  }
+  handle_serial_input(Serial);
+  handle_serial_input(Serial1);
 }
