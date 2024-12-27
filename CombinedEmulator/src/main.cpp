@@ -99,7 +99,10 @@ void setup() {
   sht::begin();
   bme::begin();
 
-  const auto status = WiFi.begin(ssid, pass);
+  auto status = WL_DISCONNECTED;
+  // Uncomment this line to connect to wifi
+  // You must set the EMBEDDED_PASS and EMBEDDED_SSID environment variables before compiling
+  // status = WiFi.begin(ssid, pass);
 
   if ( status != WL_CONNECTED) {
     Serial.println("Could not connect to wireless network");
@@ -174,13 +177,11 @@ void loop() {
 
     sprintf(buffer_, "{\"input0\": %d, \"input1\": %d, \"input2\": %d}",input0, input1, input2);
 
-    Serial.println(buffer_);
     Serial1.println(buffer_);
 
     last_refresh_ = millis();
     stale_inputs = false;
   }
 
-  handle_serial_input(Serial);
   handle_serial_input(Serial1);
 }

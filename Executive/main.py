@@ -7,15 +7,15 @@ import threading
 boptest_host = '10.1.1.158'
 testcase_id = 'g1700430'
 
-STEP_SIZE = 20.0
-TIME_SCALER = 10.0
+STEP_SIZE = 30.0
+TIME_SCALER = 15.0
 ON = 1
 OFF = 0
 fan_status = 0
 heating_status = 0
 cooling_status = 0
 ADVANCE_INTERVAL = STEP_SIZE / TIME_SCALER
-serial_port = '/dev/tty.usbmodem14401'
+serial_port = '/dev/tty.usbserial-0001'
 baudrate = 115200
 
 
