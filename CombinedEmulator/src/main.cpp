@@ -9,8 +9,8 @@
 // This used both Wire and Wire1 interfaces available on the Pico
 
 WebServer server(80);
-constexpr char ssid[] = EMBEDDED_SSID; //  your network SSID
-constexpr char pass[] = EMBEDDED_PASS; //  your network password
+constexpr char ssid[] = "Biryani4Souls"; //  your network SSID
+constexpr char pass[] = "Queen1991"; //  your network password
 double T_store;
 double H_store;
 
@@ -93,8 +93,8 @@ void setup() {
   sht::init();
   bme::init();
 
-  set_T(22.0);
-  set_H(50.0);
+  set_T(20.0);
+  set_H(0.0, 20.0);
 
   sht::begin();
   bme::begin();
