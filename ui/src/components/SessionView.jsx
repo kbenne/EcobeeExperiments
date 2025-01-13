@@ -16,7 +16,7 @@ function SessionView({ selectedDateTime, onBack }) {
   const [indoorTemp, setIndoorTemp] = useState(72.5);
   const [outdoorTemp, setOutdoorTemp] = useState(68.0);
   const [currentDateTime, setCurrentDateTime] = useState(dayjs(selectedDateTime));
-  const hvacStatus = 'Cool'; // This would typically come from your HVAC system
+  const [hvacStatus, setHvacStatus] = useState('Off'); // Default to "Off"
 
   const handleOffsetChange = (event, newValue) => {
     setTempOffset(newValue);
@@ -30,6 +30,7 @@ function SessionView({ selectedDateTime, onBack }) {
         setOutdoorTemp(data.outdoorTemp);
         setIndoorTemp(data.indoorTemp);
         setCurrentDateTime(dayjs(data.currentDateTime));
+        setHvacStatus(data.hvacStatus); 
       } catch (error) {
         console.error('Error fetching temperature:', error);
       }
@@ -121,7 +122,7 @@ function SessionView({ selectedDateTime, onBack }) {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <HvacStatus status={hvacStatus} />
+                <HvacStatus status={hvacStatus} /> 
               </Grid>
             </Grid>
           </Paper>

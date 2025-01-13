@@ -27,7 +27,7 @@ baudrate = 115200
 
 # The epoch from the BOPTEST / Modelica / Spawn point of view
 epoch_datetime = datetime(year=2024, month=1, day=1, hour=0, minute=0, second=0)
-start_datetime = datetime(year=2024, month=7, day=1, hour=13, minute=0, second=0)
+start_datetime = datetime(year=2024, month=1, day=1, hour=13, minute=0, second=0)
 start_seconds = (start_datetime - epoch_datetime).total_seconds()
 
 # ---------------------------------
@@ -53,6 +53,20 @@ def kelvin_to_fahrenheit(kelvin):
     fahrenheit = (kelvin - 273.15) * 9/5 + 32
     return fahrenheit
 
+def HVAC_status():
+    # Determine the HVAC status
+    hvac_status = "Off"  # Default
+    if heating_status:
+        hvac_status = "Heat"
+    elif cooling_status:
+        hvac_status = "Cool"
+    elif fan_status:
+        hvac_status = "Fan"
+    
+    return hvac_status
+
+    
+
 # -------------------
 # Flask App
 # -------------------
@@ -68,7 +82,8 @@ def get_zone_temp():
     return jsonify({
         'indoorTemp': kelvin_to_fahrenheit(latest_zone_temp_kelvin),
         'outdoorTemp': kelvin_to_fahrenheit(latest_oa_temp_kelvin),
-        'currentDateTime': dt.strftime("%Y-%m-%d %H:%M:%S")
+        'currentDateTime': dt.strftime("%Y-%m-%d %H:%M:%S"),
+        'hvacStatus': HVAC_status()
     })
 
 # -------------------
@@ -93,7 +108,6 @@ class SerialIO:
                 data = self.ser.readline().decode('utf-8').rstrip()  # Read a line
                 try:
                     json_data = json.loads(data)
-                    print(json_data)
                     if "input0" in json_data:
                         fan_status = json_data["input0"]
                     if "input1" in json_data:
