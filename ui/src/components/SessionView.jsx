@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -40,6 +41,19 @@ function SessionView({ selectedDateTime, onBack }) {
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
+
+  const handleStopSimulation = async () => {
+    try {
+      // 1) Signal the Flask server to stop
+      await axios.post('http://127.0.0.1:5000/api/stop_simulation');
+
+      // 2) Then go back to SetupView
+      onBack();
+    } catch (error) {
+      console.error('Error stopping simulation:', error);
+      alert('Failed to stop simulation!');
+    }
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -160,7 +174,7 @@ function SessionView({ selectedDateTime, onBack }) {
         <Button 
           variant="outlined" 
           startIcon={<ArrowBackIcon />}
-          onClick={onBack}
+          onClick={handleStopSimulation}  // Use the new handler
           size="large"
           sx={{ 
             borderRadius: 2,
