@@ -38,17 +38,17 @@ function SessionView({ selectedDateTime, onBack }) {
 
     fetchData(); // Initial fetch
 
-    const intervalId = setInterval(fetchData, 1000); // Fetch every 1 seconds
+    const intervalId = setInterval(fetchData, 1000); // Fetch every 1 second
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   const handleStopSimulation = async () => {
     try {
-      // 1) Signal the Flask server to stop
+      // Signal the Flask server to stop
       await axios.post('http://127.0.0.1:5000/api/stop_simulation');
 
-      // 2) Then go back to SetupView
+      // Then go back to SetupView
       onBack();
     } catch (error) {
       console.error('Error stopping simulation:', error);
@@ -57,7 +57,17 @@ function SessionView({ selectedDateTime, onBack }) {
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: '1024px', // Ensure it fits within the width
+        minHeight: '600px', // Ensure it fits within the height
+        maxHeight: '600px',
+        overflow: 'auto', // Allow scrolling if content overflows
+        mx: 'auto', // Center horizontally
+        p: 2, // Add padding
+      }}
+    >
       {/* Header */}
       <Typography 
         variant="h4" 
@@ -76,7 +86,8 @@ function SessionView({ selectedDateTime, onBack }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          mb: 4
+          mb: 3, // Adjusted spacing
+          textAlign: 'center',
         }}
       >
         <Typography 
@@ -106,19 +117,17 @@ function SessionView({ selectedDateTime, onBack }) {
       </Box>
 
       {/* Main Content Grid */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         {/* Indoor Conditions Section */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 3 }}>
+          <Paper sx={{ p: 2, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
               Indoor Conditions
             </Typography>
             
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <Temperature
-                  value={indoorTemp} 
-                />
+                <Temperature value={indoorTemp} />
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -129,16 +138,14 @@ function SessionView({ selectedDateTime, onBack }) {
         </Grid>
 
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, borderRadius: 2 }}>
-            <Typography variant="h6" sx={{ mb: 3 }}>
+          <Paper sx={{ p: 2, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
               Outdoor Conditions
             </Typography>
             
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                  <Temperature 
-                    value={outdoorTemp + tempOffset} 
-                  />
+                  <Temperature value={outdoorTemp + tempOffset} />
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -171,15 +178,22 @@ function SessionView({ selectedDateTime, onBack }) {
       </Grid>
 
       {/* Back Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          mt: 2, // Add spacing
+        }}
+      >
         <Button 
           variant="outlined" 
           startIcon={<ArrowBackIcon />}
-          onClick={handleStopSimulation}  // Use the new handler
+          onClick={handleStopSimulation}
           size="large"
-          sx={{ 
+          sx={{
             borderRadius: 2,
-            textTransform: 'none'
+            textTransform: 'none',
+            px: 3, 
           }}
         >
           Start a new simulation
@@ -189,4 +203,4 @@ function SessionView({ selectedDateTime, onBack }) {
   );
 }
 
-export default SessionView; 
+export default SessionView;
