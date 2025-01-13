@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -13,6 +14,7 @@ function SessionView({ selectedDateTime, onBack }) {
   const [tempOffset, setTempOffset] = useState(0);
   const [indoorTemp, setIndoorTemp] = useState(72.5);
   const [outdoorTemp, setOutdoorTemp] = useState(68.0);
+  const [currentDateTime, setCurrentDateTime] = useState(dayjs(selectedDateTime));
   const hvacStatus = 'Cool'; // This would typically come from your HVAC system
 
   const handleOffsetChange = (event, newValue) => {
@@ -20,20 +22,21 @@ function SessionView({ selectedDateTime, onBack }) {
   };
 
   useEffect(() => {
-    const fetchTemperature = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('https://api.example.com/temperature');
+        const response = await fetch('http://127.0.0.1:5000/sim_data');
         const data = await response.json();
         setOutdoorTemp(data.outdoorTemp);
         setIndoorTemp(data.indoorTemp);
+        setCurrentDateTime(dayjs(data.currentDateTime));
       } catch (error) {
         console.error('Error fetching temperature:', error);
       }
     };
 
-    fetchTemperature(); // Initial fetch
+    fetchData(); // Initial fetch
 
-    const intervalId = setInterval(fetchTemperature, 1000); // Fetch every 1 seconds
+    const intervalId = setInterval(fetchData, 1000); // Fetch every 1 seconds
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
@@ -53,12 +56,14 @@ function SessionView({ selectedDateTime, onBack }) {
       </Typography>
       
       {/* DateTime Display */}
-      <Box sx={{ 
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        mb: 4
-      }}>
+      <Box 
+        sx={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          mb: 4
+        }}
+      >
         <Typography 
           variant="h2" 
           sx={{ 
@@ -67,7 +72,9 @@ function SessionView({ selectedDateTime, onBack }) {
             color: 'text.primary'
           }}
         >
-          {selectedDateTime.format('HH:mm:ss')}
+          {currentDateTime.isValid() 
+            ? currentDateTime.format('HH:mm:ss') 
+            : 'Invalid date'}
         </Typography>
         
         <Typography 
@@ -77,7 +84,9 @@ function SessionView({ selectedDateTime, onBack }) {
             color: 'text.secondary'
           }}
         >
-          {selectedDateTime.format('MMMM D, YYYY')}
+          {currentDateTime.isValid()
+            ? currentDateTime.format('MMMM D, YYYY')
+            : ''}
         </Typography>
       </Box>
 
