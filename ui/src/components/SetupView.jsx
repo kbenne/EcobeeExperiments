@@ -16,8 +16,9 @@ function SetupView({
   // Handle the button click
   const handleStartSimulation = async () => {
     try {
-
-      await axios.post('http://127.0.0.1:5000/api/start_simulation');
+      await axios.post('http://127.0.0.1:5000/api/start_simulation', {
+        selectedDateTime: selectedDateTime.toISOString(), 
+      });
 
       // If successful, move to the next view
       onStart();

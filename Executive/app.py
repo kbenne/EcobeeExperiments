@@ -4,6 +4,7 @@ import time
 import serial
 import threading
 from datetime import datetime, timedelta
+from dateutil import parser, tz
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sys
@@ -26,8 +27,8 @@ serial_port = '/tmp/virtual-serial'
 baudrate = 115200
 
 # The epoch from the BOPTEST / Modelica / Spawn point of view
-epoch_datetime = datetime(year=2024, month=1, day=1, hour=0, minute=0, second=0)
-start_datetime = datetime(year=2024, month=1, day=1, hour=13, minute=0, second=0)
+epoch_datetime = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC)
+start_datetime = datetime(year=2025, month=1, day=1, hour=13, minute=0, second=0, tzinfo=tz.UTC)
 start_seconds = (start_datetime - epoch_datetime).total_seconds()
 
 # ---------------------------------
@@ -245,13 +246,32 @@ def run_simulation():
 def start_simulation():
     """
     Endpoint to start the entire simulation in a background thread.
+    Accepts a JSON payload with a selected start date and time.
     """
-    global simulation_thread, stop_simulation_flag
+    global simulation_thread, stop_simulation_flag, start_seconds, start_datetime
 
-    # If you want to guard against multiple starts:
+    # Parse the selected date and time from the request
+    data = request.get_json()
+    selected_datetime_str = data.get('selectedDateTime')
+    print(selected_datetime_str)
+    if not selected_datetime_str:
+        return jsonify({"message": "No selectedDateTime provided"}), 400
+
+    try:
+        # Use dateutil.parser to handle ISO-8601 format with timezone
+        selected_datetime = parser.isoparse(selected_datetime_str)
+        start_datetime = selected_datetime
+        start_seconds = (start_datetime - epoch_datetime).total_seconds()
+        print(f"Start datetime: {start_datetime}, Start seconds: {start_seconds}")
+    except ValueError as e:
+        return jsonify({"message": f"Invalid datetime format: {e}"}), 400
+
+
+    # If a simulation is already running, return an error
     if simulation_thread and simulation_thread.is_alive():
         return jsonify({"message": "Simulation is already running"}), 400
 
+    # Start a new simulation
     stop_simulation_flag = False
     simulation_thread = threading.Thread(target=run_simulation, daemon=True)
     simulation_thread.start()
