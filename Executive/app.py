@@ -15,7 +15,7 @@ import sys
 boptest_host = '172.17.0.1'
 testcase_id = '31383'
 
-STEP_SIZE = 30.0
+STEP_SIZE = 10.0
 TIME_SCALER = 15.0
 ON = 1
 OFF = 0
@@ -149,7 +149,7 @@ def run_simulation():
       4. Set step size
       5. Enter main while loop
     """
-    global serialio, testid, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt
+    global serialio, testid, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE
     try:
         # 1. Start serial
         print('Starting serial connection...')
@@ -248,12 +248,13 @@ def start_simulation():
     Endpoint to start the entire simulation in a background thread.
     Accepts a JSON payload with a selected start date and time.
     """
-    global simulation_thread, stop_simulation_flag, start_seconds, start_datetime
+    global simulation_thread, stop_simulation_flag, start_seconds, start_datetime, STEP_SIZE
 
-    # Parse the selected date and time from the request
     data = request.get_json()
     selected_datetime_str = data.get('selectedDateTime')
-    print(selected_datetime_str)
+    step_size = data.get('stepSize', STEP_SIZE)  # Default to current STEP_SIZE if not provided
+
+    STEP_SIZE = step_size
     if not selected_datetime_str:
         return jsonify({"message": "No selectedDateTime provided"}), 400
 
