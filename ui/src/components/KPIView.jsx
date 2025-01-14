@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import Plot from 'react-plotly.js';
 import axios from 'axios';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Register Chart.js components
@@ -12,21 +16,30 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 function KPIView({ onBack }) {
   const [kpiData, setKpiData] = useState(null);
+  const [viewMode, setViewMode] = useState('kpi'); // Default view mode is 'kpi'
+  const [plotData, setPlotData] = useState(null);
+  const [selectedVariable, setSelectedVariable] = useState(null); // For dropdown selection in Plotly
 
   useEffect(() => {
-    const fetchKpis = async () => {
+    const fetchKpisAndResults = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/kpi'); // Replace with correct endpoint if needed
-        setKpiData(response.data);
+        const response = await axios.get('http://127.0.0.1:5000/kpi');
+        setKpiData(response.data.kpi); // Set KPI data
+        setPlotData(response.data.results); // Set simulation results
+
+        // Set the initial selected variable for Plotly
+        if (response.data.results) {
+          setSelectedVariable(Object.keys(response.data.results)[0]);
+        }
       } catch (error) {
-        console.error('Error fetching KPI data:', error);
+        console.error('Error fetching KPI and results data:', error);
       }
     };
 
-    fetchKpis();
+    fetchKpisAndResults();
   }, []);
 
-  const data = {
+  const kpiChartData = {
     labels: kpiData ? Object.keys(kpiData) : [],
     datasets: [
       {
@@ -39,7 +52,7 @@ function KPIView({ onBack }) {
     ],
   };
 
-  const options = {
+  const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
@@ -65,16 +78,69 @@ function KPIView({ onBack }) {
       }}
     >
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Simulation KPIs
+        Simulation Data
       </Typography>
 
-      {kpiData ? (
+      {/* Radio Buttons for Toggling Views */}
+      <RadioGroup
+        row
+        value={viewMode}
+        onChange={(event) => setViewMode(event.target.value)}
+        sx={{ mb: 3 }}
+      >
+        <FormControlLabel value="kpi" control={<Radio />} label="KPI Chart" />
+        <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
+      </RadioGroup>
+
+      {/* Conditional Rendering of Views */}
+      {viewMode === 'kpi' && kpiData ? (
         <Box sx={{ width: '80%', mb: 4 }}>
-          <Bar data={data} options={options} />
+          <Bar data={kpiChartData} options={chartOptions} />
+        </Box>
+      ) : viewMode === 'plotly' && plotData && selectedVariable ? (
+        <Box sx={{ width: '100%', mb: 4 }}>
+          {/* Dropdown for selecting variable */}
+          <select
+            value={selectedVariable}
+            onChange={(e) => setSelectedVariable(e.target.value)}
+            style={{
+              marginBottom: '20px',
+              padding: '10px',
+              fontSize: '16px',
+              width: '300px',
+            }}
+          >
+            {Object.keys(plotData).map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+
+          {/* Plotly Chart */}
+          <Plot
+            data={[
+              {
+                x: Array.from({ length: plotData[selectedVariable].length }, (_, i) => i + 1),
+                y: plotData[selectedVariable],
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: 'blue' },
+              },
+            ]}
+            layout={{
+              title: `Line Plot of ${selectedVariable}`,
+              xaxis: { title: 'Step' },
+              yaxis: { title: selectedVariable },
+              responsive: true,
+            }}
+            style={{ width: '100%', height: '100%' }}
+            useResizeHandler
+          />
         </Box>
       ) : (
         <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-          Loading KPI data...
+          Loading data...
         </Typography>
       )}
 
