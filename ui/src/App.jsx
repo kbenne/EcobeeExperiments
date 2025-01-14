@@ -67,65 +67,80 @@ function App() {
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <CssBaseline />
-        <Container maxWidth={false} sx={{ width: '1024px', maxWidth: '100%' }}>
+
+        {/* Outer Container set to 1024×600 */}
+        <Container
+          maxWidth={false}
+          sx={{
+            width: 1024,
+            height: 600,
+            maxWidth: '100%',
+            maxHeight: '100%',
+            p: 0,
+            backgroundColor: 'background.default',
+            border: '1px solid #ccc', // Optional visual border
+          }}
+        >
+          {/* Outer Box (full height) */}
           <Box
             sx={{
-              minHeight: '100vh',
-              maxHeight: '600px',
-              py: 4,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              gap: 4,
-              overflow: 'auto',
+              height: '100%',
             }}
           >
-            <Typography
-              variant="h3"
-              component="h1"
+            {/* Header */}
+            <Box
               sx={{
-                color: 'primary.main',
-                fontWeight: 'bold',
+                flex: '0 0 auto',
+                py: 1.5,
+                backgroundColor: 'primary.light',
+                color: '#fff',
                 textAlign: 'center',
-                mb: 2,
               }}
             >
-              Virtual Home Environment
-            </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', m: 0 }}>
+                Virtual Home Environment
+              </Typography>
+            </Box>
 
-            <Card
+            {/* Main Content */}
+            <Box
               sx={{
-                width: '100%',
-                maxWidth: 1024,
-                boxShadow: 3,
-                borderRadius: 2,
+                flex: '1 1 auto',
+                p: 2,
+                display: 'flex',
               }}
             >
-              <CardContent
+              <Card
                 sx={{
+                  width: '100%',
+                  borderRadius: 2,
+                  boxShadow: 3,
+                  // Fill remaining vertical space
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 4,
-                  p: 4,
                 }}
               >
-                {!isStarted ? (
-                  <SetupView
-                    selectedDateTime={selectedDateTime}
-                    setSelectedDateTime={setSelectedDateTime}
-                    onStart={handleStart}
-                    minDate={minDate}
-                    maxDate={maxDate}
-                  />
-                ) : (
-                  <SessionView
-                    selectedDateTime={selectedDateTime}
-                    onBack={handleBack}
-                  />
-                )}
-              </CardContent>
-            </Card>
+                <CardContent sx={{ flex: '1 1 auto', p: 2 }}>
+                  {/* Conditionally render SetupView or SessionView */}
+                  {!isStarted ? (
+                    <SetupView
+                      selectedDateTime={selectedDateTime}
+                      setSelectedDateTime={setSelectedDateTime}
+                      onStart={handleStart}
+                      minDate={minDate}
+                      maxDate={maxDate}
+                    />
+                  ) : (
+                    <SessionView
+                      selectedDateTime={selectedDateTime}
+                      onBack={handleBack}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </Box>
           </Box>
         </Container>
       </LocalizationProvider>
