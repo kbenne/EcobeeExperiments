@@ -8,14 +8,32 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Temperature from './Temperature';
 import HvacStatus from './HvacStatus';
 import Paper from '@mui/material/Paper';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 function SessionView({ selectedDateTime, onBack }) {
   const [indoorTemp, setIndoorTemp] = useState(72.5);
   const [outdoorTemp, setOutdoorTemp] = useState(68.0);
   const [currentDateTime, setCurrentDateTime] = useState(dayjs(selectedDateTime));
   const [hvacStatus, setHvacStatus] = useState('Off'); // Default to "Off"
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
+    const checkSimulationReady = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:5000/sim_ready');
+        if (response.data.simulationReady) {
+          setLoading(false);
+        } else {
+          setTimeout(checkSimulationReady, 1000); // Retry after 1 second
+        }
+      } catch (error) {
+        console.error('Error checking simulation readiness:', error);
+      }
+    };
+
+    checkSimulationReady();
+
     const fetchData = async () => {
       try {
         const response = await fetch('http://127.0.0.1:5000/sim_data');
@@ -29,7 +47,6 @@ function SessionView({ selectedDateTime, onBack }) {
       }
     };
 
-    fetchData(); // Initial fetch
     const intervalId = setInterval(fetchData, 1000); // Fetch every second
 
     return () => clearInterval(intervalId);
@@ -48,134 +65,139 @@ function SessionView({ selectedDateTime, onBack }) {
   };
 
   return (
-    /*
-     * Parent Box occupies the entire area (height is 540px due to 60px header).
-     */
-    <Box
-      sx={{
-        width: '100%',
-        height: 470, // Remaining height after header
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        p: 0,
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* Header Section */}
-      <Box sx={{ textAlign: 'center', mb: 1 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            color: 'primary.main',
-            fontWeight: 'medium',
-          }}
-        >
-          Current Simulation Time
-        </Typography>
+    <>
+      {/* Loading Spinner */}
+      <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
 
-        {/* Time & Date */}
-        <Typography
-          variant="h2"
-          sx={{
-            fontFamily: 'monospace',
-            fontWeight: 'bold',
-            color: 'text.primary',
-          }}
-        >
-          {currentDateTime.isValid()
-            ? currentDateTime.format('HH:mm:ss')
-            : 'Invalid date'}
-        </Typography>
-
-        <Typography
-          variant="h5"
-          sx={{
-            fontFamily: 'monospace',
-            color: 'text.secondary',
-          }}
-        >
-          {currentDateTime.isValid()
-            ? currentDateTime.format('MMMM D, YYYY')
-            : ''}
-        </Typography>
-      </Box>
-
-      {/* Conditions Section (Indoor & Outdoor Side-by-Side) */}
+      {/* Parent Box occupies the entire area (height is 540px due to 60px header). */}
       <Box
         sx={{
+          width: '100%',
+          height: 470, // Remaining height after header
           display: 'flex',
-          flexDirection: 'row',
-          gap: 2,
-          flex: 1,
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          p: 0,
+          boxSizing: 'border-box',
         }}
       >
-        {/* Indoor Conditions */}
-        <Paper
-          sx={{
-            flex: 1,
-            p: 2,
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Indoor Conditions
+        {/* Header Section */}
+        <Box sx={{ textAlign: 'center', mb: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 'medium',
+            }}
+          >
+            Current Simulation Time
           </Typography>
 
-          <Box>
-            <Temperature value={indoorTemp} />
-          </Box>
-          <Box>
-            <HvacStatus status={hvacStatus} />
-          </Box>
-        </Paper>
-
-        {/* Outdoor Conditions */}
-        <Paper
-          sx={{
-            flex: 1,
-            p: 2,
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Outdoor Conditions
+          {/* Time & Date */}
+          <Typography
+            variant="h2"
+            sx={{
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              color: 'text.primary',
+            }}
+          >
+            {currentDateTime.isValid()
+              ? currentDateTime.format('HH:mm:ss')
+              : 'Invalid date'}
           </Typography>
 
-          <Box>
-            <Temperature value={outdoorTemp} />
-          </Box>
-        </Paper>
-      </Box>
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: 'monospace',
+              color: 'text.secondary',
+            }}
+          >
+            {currentDateTime.isValid()
+              ? currentDateTime.format('MMMM D, YYYY')
+              : ''}
+          </Typography>
+        </Box>
 
-      {/* Bottom Button */}
-      <Box
-        sx={{
-          textAlign: 'center',
-          mt: 2,
-        }}
-      >
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleStopSimulation}
-          size="large"
+        {/* Conditions Section (Indoor & Outdoor Side-by-Side) */}
+        <Box
           sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            px: 3,
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 2,
+            flex: 1,
           }}
         >
-          Start a new simulation
-        </Button>
+          {/* Indoor Conditions */}
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              borderRadius: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Indoor Conditions
+            </Typography>
+
+            <Box>
+              <Temperature value={indoorTemp} />
+            </Box>
+            <Box>
+              <HvacStatus status={hvacStatus} />
+            </Box>
+          </Paper>
+
+          {/* Outdoor Conditions */}
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              borderRadius: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Outdoor Conditions
+            </Typography>
+
+            <Box>
+              <Temperature value={outdoorTemp} />
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Bottom Button */}
+        <Box
+          sx={{
+            textAlign: 'center',
+            mt: 2,
+          }}
+        >
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={handleStopSimulation}
+            size="large"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+            }}
+          >
+            Start a new simulation
+          </Button>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 }
 

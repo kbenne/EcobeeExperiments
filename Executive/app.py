@@ -25,6 +25,7 @@ cooling_status = 0
 ADVANCE_INTERVAL = STEP_SIZE / TIME_SCALER
 serial_port = '/tmp/virtual-serial'
 baudrate = 115200
+simulation_ready = False
 
 # The epoch from the BOPTEST / Modelica / Spawn point of view
 epoch_datetime = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC)
@@ -141,6 +142,15 @@ stop_simulation_flag = False
 serialio = None
 testid = None
 
+@app.route('/sim_ready', methods=['GET'])
+def check_sim_ready():
+    """
+    Endpoint to check if the simulation is ready to start updating data.
+    Returns true once the simulation enters the main loop.
+    """
+    global simulation_ready
+    return jsonify({"simulationReady": simulation_ready})
+
 def run_simulation():
     """
       1. Start serial
@@ -149,7 +159,7 @@ def run_simulation():
       4. Set step size
       5. Enter main while loop
     """
-    global serialio, testid, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE
+    global serialio, testid, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE, simulation_ready
     try:
         # 1. Start serial
         print('Starting serial connection...')
@@ -191,6 +201,7 @@ def run_simulation():
         dt = start_datetime
 
         # 5. Main control loop
+        simulation_ready = True
         while response.status_code == 200 and not stop_simulation_flag:
             if time.time() - t >= ADVANCE_INTERVAL:
                 t = t + ADVANCE_INTERVAL
@@ -235,6 +246,7 @@ def run_simulation():
         if testid is not None:
             print('Stopping test case...')
             requests.put(url=f"http://{boptest_host}/stop/{testid}",)
+            simulation_ready = False
 
         # Stop serial if started
         if serialio is not None:
