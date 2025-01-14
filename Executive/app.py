@@ -151,6 +151,17 @@ def check_sim_ready():
     global simulation_ready
     return jsonify({"simulationReady": simulation_ready})
 
+@app.route('/kpi', methods=['GET'])
+def get_kpi():
+    """
+    Endpoint to get current sim KPIs.
+    """
+    kpis = requests.get(
+            f"http://{boptest_host}/kpi/{testid}",
+            headers={"Content-Type": "application/json; charset=utf-8"}
+        ).json()["payload"]
+    return kpis
+
 def run_simulation():
     """
       1. Start serial
@@ -239,6 +250,29 @@ def run_simulation():
                 print("")
 
         # Once we exit the loop, either stop_simulation_flag == True or error
+        kpis = requests.get(
+            f"http://{boptest_host}/kpi/{testid}",
+            headers={"Content-Type": "application/json; charset=utf-8"}
+        ).json()["payload"]
+
+        print(f"kpis: {kpis}")
+
+        measurements = requests.get(
+            f"http://{boptest_host}/measurements/{testid}",
+            headers={"Content-Type": "application/json; charset=utf-8"}
+        ).json()["payload"]
+        print(f"measurements: {measurements}")
+        points = list(measurements.keys()) 
+        res = requests.put(f"http://{boptest_host}/results/{testid}", 
+                           data={'point_names': points, 
+                                 'start_time': start_seconds, 
+                                 'final_time': float('inf')
+                                 }
+                                 ).json()["payload"]
+        print(f"Results: {res}")
+
+
+
     except Exception as e:
         print(f'Error in run_simulation: {e}')
     finally:

@@ -5,13 +5,14 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import Temperature from './Temperature';
 import HvacStatus from './HvacStatus';
 import Paper from '@mui/material/Paper';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
-function SessionView({ selectedDateTime, onBack }) {
+function SessionView({ selectedDateTime, onBack, onShowKPI }) {
   const [indoorTemp, setIndoorTemp] = useState(72.5);
   const [outdoorTemp, setOutdoorTemp] = useState(68.0);
   const [currentDateTime, setCurrentDateTime] = useState(dayjs(selectedDateTime));
@@ -175,11 +176,14 @@ function SessionView({ selectedDateTime, onBack }) {
           </Paper>
         </Box>
 
-        {/* Bottom Button */}
+        {/* Bottom Buttons */}
         <Box
           sx={{
             textAlign: 'center',
             mt: 2,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 2,
           }}
         >
           <Button
@@ -194,6 +198,20 @@ function SessionView({ selectedDateTime, onBack }) {
             }}
           >
             Start a new simulation
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<BarChartIcon />}
+            onClick={onShowKPI}
+            size="large"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+            }}
+          >
+            View KPIs
           </Button>
         </Box>
       </Box>

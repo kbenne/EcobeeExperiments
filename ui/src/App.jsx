@@ -11,6 +11,7 @@ import { useState } from 'react';
 import dayjs from 'dayjs';
 import SetupView from './components/SetupView';
 import SessionView from './components/SessionView';
+import KPIView from './components/KPIView';
 
 // Create the theme with responsive typography
 let theme = createTheme({
@@ -51,16 +52,24 @@ theme = responsiveFontSizes(theme);
 
 function App() {
   const [selectedDateTime, setSelectedDateTime] = useState(dayjs());
-  const [isStarted, setIsStarted] = useState(false);
+  const [currentView, setCurrentView] = useState('setup'); // Tracks the current view ('setup', 'session', 'kpi')
   const minDate = dayjs().startOf('year');
   const maxDate = dayjs().endOf('year');
 
   const handleStart = () => {
-    setIsStarted(true);
+    setCurrentView('session');
   };
 
   const handleBack = () => {
-    setIsStarted(false);
+    setCurrentView('setup');
+  };
+
+  const handleShowKPI = () => {
+    setCurrentView('kpi');
+  };
+
+  const handleBackToSession = () => {
+    setCurrentView('session');
   };
 
   return (
@@ -123,8 +132,8 @@ function App() {
                 }}
               >
                 <CardContent sx={{ flex: '1 1 auto', p: 2 }}>
-                  {/* Conditionally render SetupView or SessionView */}
-                  {!isStarted ? (
+                  {/* Conditionally render views */}
+                  {currentView === 'setup' && (
                     <SetupView
                       selectedDateTime={selectedDateTime}
                       setSelectedDateTime={setSelectedDateTime}
@@ -132,12 +141,15 @@ function App() {
                       minDate={minDate}
                       maxDate={maxDate}
                     />
-                  ) : (
+                  )}
+                  {currentView === 'session' && (
                     <SessionView
                       selectedDateTime={selectedDateTime}
                       onBack={handleBack}
+                      onShowKPI={handleShowKPI}
                     />
                   )}
+                  {currentView === 'kpi' && <KPIView onBack={handleBackToSession} />}
                 </CardContent>
               </Card>
             </Box>
