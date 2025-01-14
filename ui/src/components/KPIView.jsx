@@ -69,95 +69,124 @@ function KPIView({ onBack }) {
   return (
     <Box
       sx={{
+        width: '100%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        p: 3,
+        justifyContent: 'space-between',
+        boxSizing: 'border-box',
+        overflow: 'hidden', // Prevent content overflow
+        maxHeight: '100%',
+        p: 2,
+        gap: 2,
       }}
     >
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Simulation Data
-      </Typography>
-
-      {/* Radio Buttons for Toggling Views */}
-      <RadioGroup
-        row
-        value={viewMode}
-        onChange={(event) => setViewMode(event.target.value)}
-        sx={{ mb: 3 }}
-      >
-        <FormControlLabel value="kpi" control={<Radio />} label="KPI Chart" />
-        <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
-      </RadioGroup>
-
-      {/* Conditional Rendering of Views */}
-      {viewMode === 'kpi' && kpiData ? (
-        <Box sx={{ width: '80%', mb: 4 }}>
-          <Bar data={kpiChartData} options={chartOptions} />
-        </Box>
-      ) : viewMode === 'plotly' && plotData && selectedVariable ? (
-        <Box sx={{ width: '100%', mb: 4 }}>
-          {/* Dropdown for selecting variable */}
-          <select
-            value={selectedVariable}
-            onChange={(e) => setSelectedVariable(e.target.value)}
-            style={{
-              marginBottom: '20px',
-              padding: '10px',
-              fontSize: '16px',
-              width: '300px',
-            }}
-          >
-            {Object.keys(plotData).map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-
-          {/* Plotly Chart */}
-          <Plot
-            data={[
-              {
-                x: Array.from({ length: plotData[selectedVariable].length }, (_, i) => i + 1),
-                y: plotData[selectedVariable],
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: 'blue' },
-              },
-            ]}
-            layout={{
-              title: `Line Plot of ${selectedVariable}`,
-              xaxis: { title: 'Step' },
-              yaxis: { title: selectedVariable },
-              responsive: true,
-            }}
-            style={{ width: '100%', height: '100%' }}
-            useResizeHandler
-          />
-        </Box>
-      ) : (
-        <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-          Loading data...
-        </Typography>
-      )}
-
-      <Button
-        variant="outlined"
-        startIcon={<ArrowBackIcon />}
-        onClick={onBack}
-        size="large"
+      {/* Main Content */}
+      <Box
         sx={{
-          mt: 3,
-          borderRadius: 2,
-          textTransform: 'none',
-          px: 3,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'auto', // Allow internal scrolling if content overflows
+          maxHeight: 'calc(100% - 80px)', // Reserve space for footer
         }}
       >
-        Back to Session
-      </Button>
+        {viewMode === 'kpi' && kpiData ? (
+          <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
+            <Bar data={kpiChartData} options={chartOptions} />
+          </Box>
+        ) : viewMode === 'plotly' && plotData && selectedVariable ? (
+          <Box sx={{ width: '100%', overflow: 'auto' }}>
+            {/* Dropdown for selecting variable */}
+            <select
+              value={selectedVariable}
+              onChange={(e) => setSelectedVariable(e.target.value)}
+              style={{
+                marginBottom: '2px',
+                padding: '2px',
+                fontSize: '13px',
+                width: '200px',
+              }}
+            >
+              {Object.keys(plotData).map((key) => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
+            </select>
+
+            {/* Plotly Chart */}
+            <Plot
+              data={[
+                {
+                  x: Array.from({ length: plotData[selectedVariable].length }, (_, i) => i + 1),
+                  y: plotData[selectedVariable],
+                  type: 'scatter',
+                  mode: 'lines+markers',
+                  marker: { color: 'blue' },
+                },
+              ]}
+              layout={{
+                title: `Line Plot of ${selectedVariable}`,
+                xaxis: { title: 'Step' },
+                yaxis: { title: selectedVariable },
+                responsive: true,
+                autosize: true,
+              }}
+              style={{
+                width: '100%', // Ensure the chart takes the full width of the parent
+                maxHeight: '100%', // Prevent it from exceeding parent height
+                height: '320px', // Set a fixed height
+                overflow: 'auto', // Allow scrolling if needed
+              }}
+              useResizeHandler
+            />
+          </Box>
+        ) : (
+          <Typography variant="h6" sx={{ color: 'text.secondary', flex: 1 }}>
+            Loading data...
+          </Typography>
+        )}
+      </Box>
+
+      {/* Footer Section */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {/* Radio Buttons */}
+        <RadioGroup
+          row
+          value={viewMode}
+          onChange={(event) => setViewMode(event.target.value)}
+          sx={{
+            mx: 'auto',
+          }}
+        >
+          <FormControlLabel value="kpi" control={<Radio />} label="KPI Chart" />
+          <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
+        </RadioGroup>
+
+        {/* Back Button */}
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={onBack}
+          size="large"
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            px: 3,
+          }}
+        >
+          Back to Session
+        </Button>
+      </Box>
     </Box>
   );
 }
