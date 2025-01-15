@@ -65,7 +65,7 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
       </Paper>
 
       <Typography variant="body1" sx={{ mb: 1, color: 'text.secondary' }}>
-        Simulation Time / Actual Time factor: {stepSize}
+        Warp Speed: {stepSize}
       </Typography>
       <Slider
         value={stepSize}

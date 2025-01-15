@@ -184,7 +184,7 @@ function KPIView({ onBack }) {
             px: 3,
           }}
         >
-          Back to Session
+          Start a new simulation
         </Button>
       </Box>
     </Box>
