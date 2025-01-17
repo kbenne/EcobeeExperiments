@@ -167,7 +167,7 @@ function KPIView({ onBack }) {
                   x: plotData.time.map((t) => new Date(2025, 0, 1).getTime() + t * 1000),
                   y: plotData[selectedVariable] || [],
                   type: 'scatter',
-                  mode: 'lines+markers',
+                  mode: 'lines',
                   marker: { color: 'blue' },
                 },
               ]}
