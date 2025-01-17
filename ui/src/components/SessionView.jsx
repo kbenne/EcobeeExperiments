@@ -211,7 +211,7 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
               px: 3,
             }}
           >
-            View Results
+            Stop and View Results
           </Button>
         </Box>
       </Box>

@@ -44,122 +44,160 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
     <Box
       sx={{
         display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 2,
+        flexDirection: 'column',
+        gap: 3,
         p: 3,
+        height: '100vh', // Ensure the layout uses the full height of the viewport
       }}
     >
-      {/* Custom Date and Time Option */}
-      <Paper
-        elevation={selectedOption === 'custom' ? 3 : 1}
+      {/* Instructional text */}
+      <Box
         sx={{
-          p: 3,
-          flex: 1,
-          bgcolor: selectedOption === 'custom' ? 'background.paper' : 'grey.300',
-          cursor: 'pointer',
+          textAlign: 'center',
         }}
-        onClick={() => setSelectedOption('custom')}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <AccessTimeIcon sx={{ fontSize: 60, color: selectedOption === 'custom' ? 'primary.main' : 'text.disabled', mb: 2 }} />
-          <Typography
-            variant="h6"
-            sx={{ mb: 2, color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled' }}
-          >
-            Select a date and time to begin
-          </Typography>
-          <DateTimePicker
-            label="Select Date and Time"
-            value={selectedDateTime}
-            onChange={(newValue) => setSelectedDateTime(newValue)}
-            minDateTime={minDate}
-            maxDateTime={maxDate}
-            sx={{ width: '100%' }}
-            disabled={selectedOption !== 'custom'}
-          />
-          <Typography
-            variant="body1"
-            sx={{ mt: 2, mb: 1, color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled' }}
-          >
-            Warp Speed: {stepSize}
-          </Typography>
-          <Slider
-            value={stepSize}
-            onChange={handleStepSizeChange}
-            min={1}
-            max={10}
-            step={1}
-            valueLabelDisplay="auto"
-            sx={{ width: '80%', mb: 3 }}
-            disabled={selectedOption !== 'custom'}
-          />
-        </Box>
-      </Paper>
+        <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
+          Please select either a custom date/time or a preset scenario.
+        </Typography>
+      </Box>
 
-      {/* Preset Scenario Option */}
-      <Paper
-        elevation={selectedOption === 'preset' ? 3 : 1}
+      {/* Main row with the two options */}
+      <Box
         sx={{
-          p: 3,
-          flex: 1,
-          bgcolor: selectedOption === 'preset' ? 'background.paper' : 'grey.300',
-          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          gap: 2,
+          height: '50%', // Use 50% of the total page height
         }}
-        onClick={() => setSelectedOption('preset')}
       >
-        <Box
+        {/* Custom Date and Time Option */}
+        <Paper
+          elevation={selectedOption === 'custom' ? 3 : 1}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            p: 3,
+            flex: 2, // Set width ratio 2
+            height: '100%', // Fill the parent height
+            bgcolor: selectedOption === 'custom' ? 'background.paper' : 'grey.300',
+            cursor: 'pointer',
           }}
+          onClick={() => setSelectedOption('custom')}
         >
-          <Typography
-            variant="h6"
-            sx={{ mb: 2, color: selectedOption === 'preset' ? 'text.primary' : 'text.disabled' }}
-          >
-            Select a preset scenario
-          </Typography>
-          <Button
-            variant={presetScenario === 'summer' ? 'contained' : 'outlined'}
-            onClick={() => setPresetScenario('summer')}
+          <Box
             sx={{
-              mb: 2,
-              width: '80%',
-              color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: '100%',
+              justifyContent: 'space-between', // Distribute content evenly
             }}
-            disabled={selectedOption !== 'preset'}
           >
-            1 Summer Day
-          </Button>
-          <Button
-            variant={presetScenario === 'winter' ? 'contained' : 'outlined'}
-            onClick={() => setPresetScenario('winter')}
+            <AccessTimeIcon
+              sx={{
+                fontSize: 60,
+                color: selectedOption === 'custom' ? 'primary.main' : 'text.disabled',
+              }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled',
+              }}
+            >
+              Select a date and time to begin
+            </Typography>
+            <DateTimePicker
+              label="Select Date and Time"
+              value={selectedDateTime}
+              onChange={(newValue) => setSelectedDateTime(newValue)}
+              minDateTime={minDate}
+              maxDateTime={maxDate}
+              sx={{ width: '100%' }}
+              disabled={selectedOption !== 'custom'}
+            />
+            <Typography
+              variant="body1"
+              sx={{
+                color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled',
+              }}
+            >
+              Warp Speed: {stepSize}
+            </Typography>
+            <Slider
+              value={stepSize}
+              onChange={handleStepSizeChange}
+              min={1}
+              max={10}
+              step={1}
+              valueLabelDisplay="auto"
+              sx={{ width: '80%' }}
+              disabled={selectedOption !== 'custom'}
+            />
+          </Box>
+        </Paper>
+
+        {/* Preset Scenario Option */}
+        <Paper
+          elevation={selectedOption === 'preset' ? 3 : 1}
+          sx={{
+            p: 3,
+            flex: 1, // Set width ratio 1
+            height: '100%', // Fill the parent height
+            bgcolor: selectedOption === 'preset' ? 'background.paper' : 'grey.300',
+            cursor: 'pointer',
+          }}
+          onClick={() => setSelectedOption('preset')}
+        >
+          <Box
             sx={{
-              width: '80%',
-              color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: '100%',
+              justifyContent: 'space-evenly', // Space out content evenly
             }}
-            disabled={selectedOption !== 'preset'}
           >
-            1 Winter Day
-          </Button>
-        </Box>
-      </Paper>
+            <Typography
+              variant="h6"
+              sx={{
+                color: selectedOption === 'preset' ? 'text.primary' : 'text.disabled',
+              }}
+            >
+              Select a preset scenario
+            </Typography>
+            <Button
+              variant={presetScenario === 'summer' ? 'contained' : 'outlined'}
+              onClick={() => setPresetScenario('summer')}
+              sx={{
+                width: '80%',
+                color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
+              }}
+              disabled={selectedOption !== 'preset'}
+            >
+              Summer Day
+            </Button>
+            <Button
+              variant={presetScenario === 'winter' ? 'contained' : 'outlined'}
+              onClick={() => setPresetScenario('winter')}
+              sx={{
+                width: '80%',
+                color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
+              }}
+              disabled={selectedOption !== 'preset'}
+            >
+              Winter Day
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
 
       {/* Start Button */}
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
           mt: 3,
         }}
       >

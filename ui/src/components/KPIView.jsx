@@ -39,6 +39,34 @@ const variable_name_map = {
   read_FanPower_y: "Fan Power [kW]",
 };
 
+function toScientificWithSuperscript(num, sigFigs = 3) {
+  if (num === 0) return '0';
+  const exponent = Math.floor(Math.log10(Math.abs(num)));
+  const mantissa = (num / Math.pow(10, exponent)).toPrecision(sigFigs);
+
+  // Convert the exponent to a superscript string
+  const superscriptMap = {
+    '-': '⁻',
+    '0': '⁰',
+    '1': '¹',
+    '2': '²',
+    '3': '³',
+    '4': '⁴',
+    '5': '⁵',
+    '6': '⁶',
+    '7': '⁷',
+    '8': '⁸',
+    '9': '⁹',
+  };
+
+  const superscriptExponent = String(exponent)
+    .split('')
+    .map((char) => superscriptMap[char])
+    .join('');
+
+  return `${mantissa} × 10${superscriptExponent}`;
+}
+
 function KPIView({ onBack }) {
   const [kpiData, setKpiData] = useState(null);
   const [viewMode, setViewMode] = useState('kpi');
@@ -55,7 +83,9 @@ function KPIView({ onBack }) {
 
         // Pick the first available non-time key by default
         if (response.data.results) {
-          const nonTimeKeys = Object.keys(response.data.results).filter((key) => key !== 'time');
+          const nonTimeKeys = Object.keys(response.data.results).filter(
+            (key) => key !== 'time'
+          );
           if (nonTimeKeys.length) {
             setSelectedVariable(nonTimeKeys[0]);
           }
@@ -68,7 +98,7 @@ function KPIView({ onBack }) {
     fetchKpisAndResults();
   }, []);
 
-  // 1. Define a function to stop the simulation, then go back to SetupView
+  // Stop simulation, then navigate back to SetupView
   const handleStopAndBack = async () => {
     try {
       await axios.post('http://127.0.0.1:5000/api/stop_simulation');
@@ -76,8 +106,7 @@ function KPIView({ onBack }) {
       console.error('Error stopping simulation:', error);
       alert('Failed to stop simulation!');
     }
-    // 2. Now navigate to SetupView
-    onBack(); 
+    onBack();
   };
 
   return (
@@ -123,12 +152,19 @@ function KPIView({ onBack }) {
                   {Object.entries(kpiData).map(([kpiKey, value]) => {
                     const displayName = kpiMap[kpiKey]?.name || kpiKey;
                     const displayUnit = kpiMap[kpiKey]?.unit || "";
+
+                    // If "value" is a number, format in scientific notation w/ 3 sig figs
+                    let displayValue = value;
+                    if (typeof value === 'number') {
+                      displayValue = toScientificWithSuperscript(value, 3);
+                    }
+
                     return (
                       <TableRow key={kpiKey}>
                         <TableCell component="th" scope="row">
                           {displayName}
                         </TableCell>
-                        <TableCell align="right">{value}</TableCell>
+                        <TableCell align="right">{displayValue}</TableCell>
                         <TableCell align="right">{displayUnit}</TableCell>
                       </TableRow>
                     );
@@ -164,7 +200,9 @@ function KPIView({ onBack }) {
               data={[
                 {
                   // Convert numeric time to a date-based axis
-                  x: plotData.time.map((t) => new Date(2025, 0, 1).getTime() + t * 1000),
+                  x: plotData.time.map(
+                    (t) => new Date(2025, 0, 1).getTime() + t * 1000
+                  ),
                   y: plotData[selectedVariable] || [],
                   type: 'scatter',
                   mode: 'lines',
@@ -172,9 +210,13 @@ function KPIView({ onBack }) {
                 },
               ]}
               layout={{
-                title: `Timeseries: ${variable_name_map[selectedVariable] ?? selectedVariable}`,
+                title: `Timeseries: ${
+                  variable_name_map[selectedVariable] ?? selectedVariable
+                }`,
                 xaxis: { title: 'Date/Time', type: 'date' },
-                yaxis: { title: variable_name_map[selectedVariable] ?? selectedVariable },
+                yaxis: {
+                  title: variable_name_map[selectedVariable] ?? selectedVariable,
+                },
                 responsive: true,
                 autosize: true,
               }}
@@ -213,7 +255,6 @@ function KPIView({ onBack }) {
           <FormControlLabel value="plotly" control={<Radio />} label="Timeseries Results" />
         </RadioGroup>
 
-        {/* 3. Start a new simulation => Stop + Navigate to SetupView */}
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
