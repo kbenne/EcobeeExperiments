@@ -18,7 +18,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-// 1. Create a KPI map, matching your backend KPI keys to a name & unit
+// 1. KPI map from earlier (optional if already defined):
 const kpiMap = {
   cost_tot: { name: "HVAC energy cost", unit: "$/m2 or Euro/m2" },
   emis_tot: { name: "HVAC energy emissions", unit: "kgCO2e/m2" },
@@ -31,18 +31,29 @@ const kpiMap = {
   time_rat: { name: "Computational time ratio", unit: "s/ss" },
 };
 
+// 2. Mapping from raw variable keys to display names for Plotly
+const variable_name_map = {
+  'read_TRadTemp1_y': 'Radiant Temperature [K]',
+  'read_TRoomTemp_y': 'Room Temperature [K]',
+  'time': 'Time [s]',
+  'read_ACPower_y': 'AC Power [W]',
+  'read_TAmb_y': 'Outdoor Temperature [K]',
+  'read_FurnaceHeat_y': 'Furnace Heat Energy [W]',
+  'read_FanPower_y': 'Fan Power [W]'
+};
+
 function KPIView({ onBack }) {
   const [kpiData, setKpiData] = useState(null);
-  const [viewMode, setViewMode] = useState('kpi'); 
+  const [viewMode, setViewMode] = useState('kpi'); // Default is 'kpi'
   const [plotData, setPlotData] = useState(null);
-  const [selectedVariable, setSelectedVariable] = useState(null);
+  const [selectedVariable, setSelectedVariable] = useState(null); // For dropdown selection
 
   useEffect(() => {
     const fetchKpisAndResults = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/kpi');
-        setKpiData(response.data.kpi);       // e.g. {'tdis_tot': 0.0083, 'idis_tot': 0, etc.}
-        setPlotData(response.data.results);  // simulation results
+        setKpiData(response.data.kpi);       // KPI data
+        setPlotData(response.data.results);  // Simulation results
 
         // Set the initial selected variable for Plotly
         if (response.data.results) {
@@ -84,6 +95,7 @@ function KPIView({ onBack }) {
         }}
       >
         {viewMode === 'kpi' && kpiData ? (
+          // --- KPI Table ---
           <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
             <TableContainer component={Paper}>
               <Table>
@@ -91,19 +103,16 @@ function KPIView({ onBack }) {
                   <TableRow>
                     <TableCell>KPI</TableCell>
                     <TableCell align="right">Value</TableCell>
-                    {/* 2. Add another column for Unit */}
                     <TableCell align="right">Unit</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {Object.entries(kpiData).map(([kpiKey, value]) => {
-                    // 3. Extract new name and unit from kpiMap
                     const displayName = kpiMap[kpiKey]?.name || kpiKey;
                     const displayUnit = kpiMap[kpiKey]?.unit || "";
 
                     return (
                       <TableRow key={kpiKey}>
-                        {/* Show the mapped KPI name, or fallback to the raw kpiKey */}
                         <TableCell component="th" scope="row">
                           {displayName}
                         </TableCell>
@@ -130,8 +139,9 @@ function KPIView({ onBack }) {
               }}
             >
               {Object.keys(plotData).map((key) => (
+                // Use the mapped name in the dropdown label if available
                 <option key={key} value={key}>
-                  {key}
+                  {variable_name_map[key] ?? key}
                 </option>
               ))}
             </select>
@@ -148,9 +158,11 @@ function KPIView({ onBack }) {
                 },
               ]}
               layout={{
-                title: `Line Plot of ${selectedVariable}`,
+                // Use mapped name in the title if available
+                title: `Line Plot of ${variable_name_map[selectedVariable] ?? selectedVariable}`,
                 xaxis: { title: 'Step' },
-                yaxis: { title: selectedVariable },
+                // Use mapped name for the y-axis
+                yaxis: { title: variable_name_map[selectedVariable] ?? selectedVariable },
                 responsive: true,
                 autosize: true,
               }}
