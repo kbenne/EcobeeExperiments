@@ -18,7 +18,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-// 1. KPI map from earlier (optional if already defined):
+// 1. KPI map (if needed)
 const kpiMap = {
   cost_tot: { name: "HVAC energy cost", unit: "$/m2 or Euro/m2" },
   emis_tot: { name: "HVAC energy emissions", unit: "kgCO2e/m2" },
@@ -31,29 +31,36 @@ const kpiMap = {
   time_rat: { name: "Computational time ratio", unit: "s/ss" },
 };
 
-// 2. Mapping from raw variable keys to display names for Plotly
+// 2. Variable name map for friendly labels in Plotly
 const variable_name_map = {
-  'read_TRadTemp1_y': 'Radiant Temperature [K]',
-  'read_TRoomTemp_y': 'Room Temperature [K]',
-  'time': 'Time [s]',
-  'read_ACPower_y': 'AC Power [W]',
-  'read_TAmb_y': 'Outdoor Temperature [K]',
-  'read_FurnaceHeat_y': 'Furnace Heat Energy [W]',
-  'read_FanPower_y': 'Fan Power [W]'
+  read_TRadTemp1_y: "Radiant Temperature [K]",
+  read_TRoomTemp_y: "Room Temperature [K]",
+  time: "Time [s]",
+  read_ACPower_y: "AC Power [W]",
+  read_TAmb_y: "Outdoor Temperature [K]",
+  read_FurnaceHeat_y: "Furnace Heat Energy [W]",
+  read_FanPower_y: "Fan Power [W]"
 };
 
 function KPIView({ onBack }) {
   const [kpiData, setKpiData] = useState(null);
-  const [viewMode, setViewMode] = useState('kpi'); // Default is 'kpi'
+  const [viewMode, setViewMode] = useState('kpi');
   const [plotData, setPlotData] = useState(null);
-  const [selectedVariable, setSelectedVariable] = useState(null); // For dropdown selection
+  const [selectedVariable, setSelectedVariable] = useState(null);
 
   useEffect(() => {
     const fetchKpisAndResults = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/kpi');
-        setKpiData(response.data.kpi);       // KPI data
-        setPlotData(response.data.results);  // Simulation results
+        // response.data.results is presumably an object containing arrays:
+        // {
+        //    time: [...],
+        //    read_TRadTemp1_y: [...],
+        //    read_TRoomTemp_y: [...],
+        //    ...
+        // }
+        setKpiData(response.data.kpi);
+        setPlotData(response.data.results);
 
         // Set the initial selected variable for Plotly
         if (response.data.results) {
@@ -94,8 +101,8 @@ function KPIView({ onBack }) {
           maxHeight: 'calc(100% - 80px)',
         }}
       >
+        {/* KPI Table */}
         {viewMode === 'kpi' && kpiData ? (
-          // --- KPI Table ---
           <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
             <TableContainer component={Paper}>
               <Table>
@@ -110,7 +117,6 @@ function KPIView({ onBack }) {
                   {Object.entries(kpiData).map(([kpiKey, value]) => {
                     const displayName = kpiMap[kpiKey]?.name || kpiKey;
                     const displayUnit = kpiMap[kpiKey]?.unit || "";
-
                     return (
                       <TableRow key={kpiKey}>
                         <TableCell component="th" scope="row">
@@ -126,6 +132,7 @@ function KPIView({ onBack }) {
             </TableContainer>
           </Box>
         ) : viewMode === 'plotly' && plotData && selectedVariable ? (
+          /* Plotly Chart with time as the x-axis */
           <Box sx={{ width: '100%', overflow: 'auto' }}>
             {/* Dropdown for selecting variable */}
             <select
@@ -139,30 +146,32 @@ function KPIView({ onBack }) {
               }}
             >
               {Object.keys(plotData).map((key) => (
-                // Use the mapped name in the dropdown label if available
                 <option key={key} value={key}>
                   {variable_name_map[key] ?? key}
                 </option>
               ))}
             </select>
 
-            {/* Plotly Chart */}
+            {/* Make sure 'time' exists and has the same length as the selected variable */}
             <Plot
               data={[
                 {
-                  x: Array.from({ length: plotData[selectedVariable].length }, (_, i) => i + 1),
-                  y: plotData[selectedVariable],
+                  // Instead of using index i, directly use plotData.time
+                  x: plotData.time.map((t) => new Date(2025, 0, 1).getTime() + t * 1000),
+                  y: plotData[selectedVariable] || [],
                   type: 'scatter',
                   mode: 'lines+markers',
                   marker: { color: 'blue' },
                 },
               ]}
               layout={{
-                // Use mapped name in the title if available
-                title: `Line Plot of ${variable_name_map[selectedVariable] ?? selectedVariable}`,
-                xaxis: { title: 'Step' },
-                // Use mapped name for the y-axis
-                yaxis: { title: variable_name_map[selectedVariable] ?? selectedVariable },
+                title: `Line Plot of ${
+                  variable_name_map[selectedVariable] ?? selectedVariable
+                }`,
+                xaxis: { title: 'Date/Time', type: 'date' },
+                yaxis: {
+                  title: variable_name_map[selectedVariable] ?? selectedVariable,
+                },
                 responsive: true,
                 autosize: true,
               }}
@@ -195,9 +204,7 @@ function KPIView({ onBack }) {
           row
           value={viewMode}
           onChange={(event) => setViewMode(event.target.value)}
-          sx={{
-            mx: 'auto',
-          }}
+          sx={{ mx: 'auto' }}
         >
           <FormControlLabel value="kpi" control={<Radio />} label="KPI Table" />
           <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
@@ -209,11 +216,7 @@ function KPIView({ onBack }) {
           startIcon={<ArrowBackIcon />}
           onClick={onBack}
           size="large"
-          sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            px: 3,
-          }}
+          sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
         >
           Start a new simulation
         </Button>
