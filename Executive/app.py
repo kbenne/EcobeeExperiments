@@ -29,8 +29,26 @@ simulation_ready = False
 
 # The epoch from the BOPTEST / Modelica / Spawn point of view
 epoch_datetime = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC)
-start_datetime = datetime(year=2025, month=1, day=1, hour=13, minute=0, second=0, tzinfo=tz.UTC)
+start_datetime = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC)
 start_seconds = (start_datetime - epoch_datetime).total_seconds()
+# Add 1 day's worth of seconds to start_seconds
+# Lambda for calculating scenario end seconds
+scenario_end_seconds = lambda start: start + 24 * 60 * 60  # 24 hours in seconds
+
+# Predefined scenarios
+scenarios = {
+    "winter": {
+        "start_datetime": datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC),
+    },
+    "summer": {
+        "start_datetime": datetime(year=2025, month=7, day=1, hour=0, minute=0, second=0, tzinfo=tz.UTC),
+    },
+}
+
+for key, value in scenarios.items():
+    start = (value["start_datetime"] - epoch_datetime).total_seconds()
+    value["start_seconds"] = start
+    value["end_seconds"] = scenario_end_seconds(start)
 
 # ---------------------------------
 # Global variable to track zone temp
@@ -286,29 +304,32 @@ def run_simulation():
 
 @app.route('/api/start_simulation', methods=['POST'])
 def start_simulation():
-    """
-    Endpoint to start the entire simulation in a background thread.
-    Accepts a JSON payload with a selected start date and time.
-    """
     global simulation_thread, stop_simulation_flag, start_seconds, start_datetime, STEP_SIZE
 
     data = request.get_json()
-    selected_datetime_str = data.get('selectedDateTime')
+    preset_scenario = data.get('presetScenario')  # Check for preset scenarios
     step_size = data.get('stepSize', STEP_SIZE)  # Default to current STEP_SIZE if not provided
 
     STEP_SIZE = step_size
-    if not selected_datetime_str:
-        return jsonify({"message": "No selectedDateTime provided"}), 400
+    if preset_scenario:
+        if preset_scenario not in scenarios:
+            return jsonify({"message": f"Invalid scenario: {preset_scenario}"}), 400
+        
+        # Use pre-defined start and end times
+        start_seconds = scenarios[preset_scenario]["start_seconds"]
+        start_datetime = scenarios[preset_scenario]["start_datetime"]
+    else:
+        selected_datetime_str = data.get('selectedDateTime')
+        if not selected_datetime_str:
+            return jsonify({"message": "No selectedDateTime provided"}), 400
 
-    try:
-        # Use dateutil.parser to handle ISO-8601 format with timezone
-        selected_datetime = parser.isoparse(selected_datetime_str)
-        start_datetime = selected_datetime
-        start_seconds = (start_datetime - epoch_datetime).total_seconds()
-        print(f"Start datetime: {start_datetime}, Start seconds: {start_seconds}")
-    except ValueError as e:
-        return jsonify({"message": f"Invalid datetime format: {e}"}), 400
-
+        try:
+            # Use dateutil.parser to handle ISO-8601 format with timezone
+            selected_datetime = parser.isoparse(selected_datetime_str)
+            start_datetime = selected_datetime
+            start_seconds = (start_datetime - epoch_datetime).total_seconds()
+        except ValueError as e:
+            return jsonify({"message": f"Invalid datetime format: {e}"}), 400
 
     # If a simulation is already running, return an error
     if simulation_thread and simulation_thread.is_alive():
@@ -319,6 +340,7 @@ def start_simulation():
     simulation_thread = threading.Thread(target=run_simulation, daemon=True)
     simulation_thread.start()
     return jsonify({"message": "Simulation started"}), 200
+
 
 @app.route('/api/stop_simulation', methods=['POST'])
 def stop_simulation():
