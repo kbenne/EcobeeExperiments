@@ -33,7 +33,6 @@ const kpiMap = {
 const variable_name_map = {
   read_TRadTemp1_y: "Radiant Temperature [K]",
   read_TRoomTemp_y: "Room Temperature [K]",
-  // 'time': "Time [s]",   <-- We no longer need this in the dropdown
   read_ACPower_y: "AC Power [kW]",
   read_TAmb_y: "Outdoor Temperature [K]",
   read_FurnaceHeat_y: "Furnace Gas Power [kW]",
@@ -160,7 +159,7 @@ function KPIView({ onBack }) {
                 },
               ]}
               layout={{
-                title: `Line Plot of ${
+                title: `Timeseries: ${
                   variable_name_map[selectedVariable] ?? selectedVariable
                 }`,
                 xaxis: { title: 'Date/Time', type: 'date' },
@@ -201,7 +200,7 @@ function KPIView({ onBack }) {
           sx={{ mx: 'auto' }}
         >
           <FormControlLabel value="kpi" control={<Radio />} label="KPI Table" />
-          <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
+          <FormControlLabel value="plotly" control={<Radio />} label="Timeseries Results" />
         </RadioGroup>
 
         <Button
