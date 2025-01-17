@@ -18,7 +18,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-// 1. KPI map (if needed)
 const kpiMap = {
   cost_tot: { name: "HVAC energy cost", unit: "$/m2 or Euro/m2" },
   emis_tot: { name: "HVAC energy emissions", unit: "kgCO2e/m2" },
@@ -31,15 +30,14 @@ const kpiMap = {
   time_rat: { name: "Computational time ratio", unit: "s/ss" },
 };
 
-// 2. Variable name map for friendly labels in Plotly
 const variable_name_map = {
   read_TRadTemp1_y: "Radiant Temperature [K]",
   read_TRoomTemp_y: "Room Temperature [K]",
-  time: "Time [s]",
-  read_ACPower_y: "AC Power [W]",
+  // 'time': "Time [s]",   <-- We no longer need this in the dropdown
+  read_ACPower_y: "AC Power [kW]",
   read_TAmb_y: "Outdoor Temperature [K]",
-  read_FurnaceHeat_y: "Furnace Heat Energy [W]",
-  read_FanPower_y: "Fan Power [W]"
+  read_FurnaceHeat_y: "Furnace Gas Power [kW]",
+  read_FanPower_y: "Fan Power [kW]",
 };
 
 function KPIView({ onBack }) {
@@ -52,19 +50,15 @@ function KPIView({ onBack }) {
     const fetchKpisAndResults = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/kpi');
-        // response.data.results is presumably an object containing arrays:
-        // {
-        //    time: [...],
-        //    read_TRadTemp1_y: [...],
-        //    read_TRoomTemp_y: [...],
-        //    ...
-        // }
         setKpiData(response.data.kpi);
         setPlotData(response.data.results);
 
-        // Set the initial selected variable for Plotly
         if (response.data.results) {
-          setSelectedVariable(Object.keys(response.data.results)[0]);
+          // Pick the first available non-time key by default
+          const nonTimeKeys = Object.keys(response.data.results).filter((key) => key !== 'time');
+          if (nonTimeKeys.length) {
+            setSelectedVariable(nonTimeKeys[0]);
+          }
         }
       } catch (error) {
         console.error('Error fetching KPI and results data:', error);
@@ -101,7 +95,6 @@ function KPIView({ onBack }) {
           maxHeight: 'calc(100% - 80px)',
         }}
       >
-        {/* KPI Table */}
         {viewMode === 'kpi' && kpiData ? (
           <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
             <TableContainer component={Paper}>
@@ -132,9 +125,7 @@ function KPIView({ onBack }) {
             </TableContainer>
           </Box>
         ) : viewMode === 'plotly' && plotData && selectedVariable ? (
-          /* Plotly Chart with time as the x-axis */
           <Box sx={{ width: '100%', overflow: 'auto' }}>
-            {/* Dropdown for selecting variable */}
             <select
               value={selectedVariable}
               onChange={(e) => setSelectedVariable(e.target.value)}
@@ -145,14 +136,18 @@ function KPIView({ onBack }) {
                 width: '200px',
               }}
             >
-              {Object.keys(plotData).map((key) => (
-                <option key={key} value={key}>
-                  {variable_name_map[key] ?? key}
-                </option>
-              ))}
+              {
+                // Remove 'time' from the list
+                Object.keys(plotData)
+                  .filter((key) => key !== 'time')
+                  .map((key) => (
+                    <option key={key} value={key}>
+                      {variable_name_map[key] ?? key}
+                    </option>
+                  ))
+              }
             </select>
 
-            {/* Make sure 'time' exists and has the same length as the selected variable */}
             <Plot
               data={[
                 {
@@ -199,7 +194,6 @@ function KPIView({ onBack }) {
           alignItems: 'center',
         }}
       >
-        {/* Radio Buttons */}
         <RadioGroup
           row
           value={viewMode}
@@ -210,7 +204,6 @@ function KPIView({ onBack }) {
           <FormControlLabel value="plotly" control={<Radio />} label="Line Plot" />
         </RadioGroup>
 
-        {/* Back Button */}
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
