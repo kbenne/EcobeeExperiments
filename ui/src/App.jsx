@@ -69,7 +69,7 @@ function App() {
   };
 
   const handleBackToSession = () => {
-    setCurrentView('session');
+    setCurrentView('setup');;
   };
 
   return (

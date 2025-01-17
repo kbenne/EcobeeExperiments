@@ -45,6 +45,7 @@ function KPIView({ onBack }) {
   const [plotData, setPlotData] = useState(null);
   const [selectedVariable, setSelectedVariable] = useState(null);
 
+  // Fetch KPI data and results on mount
   useEffect(() => {
     const fetchKpisAndResults = async () => {
       try {
@@ -52,8 +53,8 @@ function KPIView({ onBack }) {
         setKpiData(response.data.kpi);
         setPlotData(response.data.results);
 
+        // Pick the first available non-time key by default
         if (response.data.results) {
-          // Pick the first available non-time key by default
           const nonTimeKeys = Object.keys(response.data.results).filter((key) => key !== 'time');
           if (nonTimeKeys.length) {
             setSelectedVariable(nonTimeKeys[0]);
@@ -66,6 +67,18 @@ function KPIView({ onBack }) {
 
     fetchKpisAndResults();
   }, []);
+
+  // 1. Define a function to stop the simulation, then go back to SetupView
+  const handleStopAndBack = async () => {
+    try {
+      await axios.post('http://127.0.0.1:5000/api/stop_simulation');
+    } catch (error) {
+      console.error('Error stopping simulation:', error);
+      alert('Failed to stop simulation!');
+    }
+    // 2. Now navigate to SetupView
+    onBack(); 
+  };
 
   return (
     <Box
@@ -94,6 +107,7 @@ function KPIView({ onBack }) {
           maxHeight: 'calc(100% - 80px)',
         }}
       >
+        {/* KPI Table */}
         {viewMode === 'kpi' && kpiData ? (
           <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
             <TableContainer component={Paper}>
@@ -124,7 +138,9 @@ function KPIView({ onBack }) {
             </TableContainer>
           </Box>
         ) : viewMode === 'plotly' && plotData && selectedVariable ? (
+          // Timeseries Plot
           <Box sx={{ width: '100%', overflow: 'auto' }}>
+            {/* Dropdown for selecting variable */}
             <select
               value={selectedVariable}
               onChange={(e) => setSelectedVariable(e.target.value)}
@@ -135,22 +151,19 @@ function KPIView({ onBack }) {
                 width: '200px',
               }}
             >
-              {
-                // Remove 'time' from the list
-                Object.keys(plotData)
-                  .filter((key) => key !== 'time')
-                  .map((key) => (
-                    <option key={key} value={key}>
-                      {variable_name_map[key] ?? key}
-                    </option>
-                  ))
-              }
+              {Object.keys(plotData)
+                .filter((key) => key !== 'time')
+                .map((key) => (
+                  <option key={key} value={key}>
+                    {variable_name_map[key] ?? key}
+                  </option>
+                ))}
             </select>
 
             <Plot
               data={[
                 {
-                  // Instead of using index i, directly use plotData.time
+                  // Convert numeric time to a date-based axis
                   x: plotData.time.map((t) => new Date(2025, 0, 1).getTime() + t * 1000),
                   y: plotData[selectedVariable] || [],
                   type: 'scatter',
@@ -159,13 +172,9 @@ function KPIView({ onBack }) {
                 },
               ]}
               layout={{
-                title: `Timeseries: ${
-                  variable_name_map[selectedVariable] ?? selectedVariable
-                }`,
+                title: `Timeseries: ${variable_name_map[selectedVariable] ?? selectedVariable}`,
                 xaxis: { title: 'Date/Time', type: 'date' },
-                yaxis: {
-                  title: variable_name_map[selectedVariable] ?? selectedVariable,
-                },
+                yaxis: { title: variable_name_map[selectedVariable] ?? selectedVariable },
                 responsive: true,
                 autosize: true,
               }}
@@ -193,6 +202,7 @@ function KPIView({ onBack }) {
           alignItems: 'center',
         }}
       >
+        {/* View Mode Switch */}
         <RadioGroup
           row
           value={viewMode}
@@ -203,12 +213,17 @@ function KPIView({ onBack }) {
           <FormControlLabel value="plotly" control={<Radio />} label="Timeseries Results" />
         </RadioGroup>
 
+        {/* 3. Start a new simulation => Stop + Navigate to SetupView */}
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
-          onClick={onBack}
+          onClick={handleStopAndBack}
           size="large"
-          sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            px: 3,
+          }}
         >
           Start a new simulation
         </Button>
