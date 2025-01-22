@@ -8,12 +8,14 @@ from dateutil import parser, tz
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sys
+import os
 
 # -------------------
 # Global Configuration
 # -------------------
-boptest_host = '172.17.0.1'
-testcase_id = '31383'
+boptest_host = os.getenv('HIL_BOPTEST_HOST', '127.0.0.1')
+testcase_id = os.getenv('HIL_TESTCASE_ID', '31383')
+serial_port = os.getenv('HIL_SERIAL_PORT', '/dev/ttyS4')
 
 STEP_SIZE = 10.0
 TIME_SCALER = 15.0
@@ -23,7 +25,6 @@ fan_status = 0
 heating_status = 0
 cooling_status = 0
 ADVANCE_INTERVAL = STEP_SIZE / TIME_SCALER
-serial_port = '/tmp/virtual-serial'
 baudrate = 115200
 simulation_ready = False
 
@@ -260,8 +261,10 @@ def run_simulation():
                 json_data = json.dumps({
                     "overwrite_FurnaceStatus_u": f"{heating_status}",
                     "overwrite_FurnaceStatus_activate": f"{ON}",
-                    "overwrite_ACstatus_u": f"{cooling_status * -1}",
-                    "overwrite_ACstatus_activate": f"{ON}"
+                    "overwrite_ACstatus_u": f"{cooling_status}",
+                    "overwrite_ACstatus_activate": f"{ON}",
+                    "fan_Control_overwrite_fan_u": f"{fan_status}",
+                    "fan_Control_overwrite_fan_activate": f"{ON}"
                 })
 
                 response = requests.post(
