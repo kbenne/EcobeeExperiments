@@ -8,24 +8,14 @@ function Temperature({ title, value }) {
   const displayValue = typeof value === 'number' ? value.toFixed(1) : 'N/A';
 
   return (
-    <Paper
-      elevation={2}
-      sx={{
-        p: 3,
-        borderRadius: 2,
-        width: '100%',
-        bgcolor: 'background.paper'
-      }}
-    >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <ThermostatIcon sx={{ fontSize: 40, color: 'primary.main' }} />
         <Box>
           <Typography
             variant="body1"
             color="text.secondary"
-            sx={{ visibility: title ? 'visible' : 'hidden' }}
           >
-            {title || 'Temperature'}
+            Temperature
           </Typography>
           <Box sx={{ minWidth: '150px' }}>
             <Typography
@@ -41,7 +31,6 @@ function Temperature({ title, value }) {
           </Box>
         </Box>
       </Box>
-    </Paper>
   );
 }
 

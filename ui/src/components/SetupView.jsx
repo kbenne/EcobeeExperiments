@@ -45,9 +45,10 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        minWidth: '1000px',
+        minHeight:'460px',
         gap: 3,
         p: 3,
-        height: '100vh', // Ensure the layout uses the full height of the viewport
       }}
     >
       {/* Instructional text */}
@@ -66,10 +67,8 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
         sx={{
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
           gap: 2,
-          height: '50%', // Use 50% of the total page height
+          height: '250px',
         }}
       >
         {/* Custom Date and Time Option */}
@@ -89,7 +88,6 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              height: '100%',
               justifyContent: 'space-between', // Distribute content evenly
             }}
           >
@@ -115,6 +113,25 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               maxDateTime={maxDate}
               sx={{ width: '100%' }}
               disabled={selectedOption !== 'custom'}
+              slotProps={{
+                // Prevent the popup from going off screen
+                popper: {
+                  modifiers: [
+                    {
+                      name: 'preventOverflow',
+                      options: {
+                        boundary: 'viewport',
+                      },
+                    },
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, -200], // Adjust popup offset
+                      },
+                    },
+                  ],
+                },
+              }}
             />
             <Typography
               variant="body1"
@@ -122,7 +139,7 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
                 color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled',
               }}
             >
-              Warp Speed: {stepSize}
+              Time Warp Factor: {stepSize}
             </Typography>
             <Slider
               value={stepSize}
@@ -143,7 +160,6 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
           sx={{
             p: 3,
             flex: 1, // Set width ratio 1
-            height: '100%', // Fill the parent height
             bgcolor: selectedOption === 'preset' ? 'background.paper' : 'grey.300',
             cursor: 'pointer',
           }}
@@ -154,8 +170,7 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              height: '100%',
-              justifyContent: 'space-evenly', // Space out content evenly
+	            gap: 2,
             }}
           >
             <Typography
@@ -171,7 +186,6 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               onClick={() => setPresetScenario('summer')}
               sx={{
                 width: '80%',
-                color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
               }}
               disabled={selectedOption !== 'preset'}
             >
@@ -182,7 +196,6 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               onClick={() => setPresetScenario('winter')}
               sx={{
                 width: '80%',
-                color: selectedOption === 'preset' ? 'primary.main' : 'text.disabled',
               }}
               disabled={selectedOption !== 'preset'}
             >

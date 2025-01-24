@@ -75,13 +75,11 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
       {/* Parent Box occupies the entire area (height is 540px due to 60px header). */}
       <Box
         sx={{
-          width: '100%',
-          height: 470, // Remaining height after header
+          minWidth: '1000px',
+          minHeight:'460px',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          p: 0,
-          boxSizing: 'border-box',
+          p: 3,
         }}
       >
         {/* Header Section */}
@@ -137,10 +135,10 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
             sx={{
               flex: 1,
               p: 2,
+			        gap: 2,
               borderRadius: 2,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
             }}
           >
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -160,10 +158,10 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
             sx={{
               flex: 1,
               p: 2,
+			        gap: 2,
               borderRadius: 2,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
             }}
           >
             <Typography variant="h6" sx={{ mb: 2 }}>

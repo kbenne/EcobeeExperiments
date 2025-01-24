@@ -76,20 +76,6 @@ function App() {
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <CssBaseline />
-
-        {/* Outer Container set to 1024×600 */}
-        <Container
-          maxWidth={false}
-          sx={{
-            width: 1024,
-            height: 600,
-            maxWidth: '100%',
-            maxHeight: '100%',
-            p: 0,
-            backgroundColor: 'background.default',
-            border: '1px solid #ccc', // Optional visual border
-          }}
-        >
           {/* Outer Box (full height) */}
           <Box
             sx={{
@@ -109,7 +95,7 @@ function App() {
               }}
             >
               <Typography variant="h4" sx={{ fontWeight: 'bold', m: 0 }}>
-                Virtual Home Environment
+                Home Energy Simulation
               </Typography>
             </Box>
 
@@ -126,12 +112,12 @@ function App() {
                   width: '100%',
                   borderRadius: 2,
                   boxShadow: 3,
-                  // Fill remaining vertical space
                   display: 'flex',
                   flexDirection: 'column',
+		              alignItems: 'center'
                 }}
               >
-                <CardContent sx={{ flex: '1 1 auto', p: 2 }}>
+	              <CardContent>
                   {/* Conditionally render views */}
                   {currentView === 'setup' && (
                     <SetupView
@@ -154,7 +140,6 @@ function App() {
               </Card>
             </Box>
           </Box>
-        </Container>
       </LocalizationProvider>
     </ThemeProvider>
   );

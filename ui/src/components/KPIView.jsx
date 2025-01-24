@@ -24,10 +24,10 @@ const kpiMap = {
   ener_tot: { name: "HVAC energy total", unit: "kWh/m2" },
   pele_tot: { name: "HVAC peak electrical demand", unit: "kW/m2" },
   pgas_tot: { name: "HVAC peak gas demand", unit: "kW/m2" },
-  pdih_tot: { name: "HVAC peak district heating demand", unit: "kW/m2" },
-  idis_tot: { name: "Indoor air quality discomfort", unit: "ppmh/zone" },
+  //pdih_tot: { name: "HVAC peak district heating demand", unit: "kW/m2" },
+  //idis_tot: { name: "Indoor air quality discomfort", unit: "ppmh/zone" },
   tdis_tot: { name: "Thermal discomfort", unit: "Kh/zone" },
-  time_rat: { name: "Computational time ratio", unit: "s/ss" },
+  //time_rat: { name: "Computational time ratio", unit: "s/ss" },
 };
 
 const variable_name_map = {
@@ -112,16 +112,12 @@ function KPIView({ onBack }) {
   return (
     <Box
       sx={{
-        width: '100%',
-        height: '100%',
+        minWidth: '1000px',
+        minHeight:'460px',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        maxHeight: '100%',
         p: 2,
-        gap: 2,
+        gap: 1,
       }}
     >
       {/* Main Content */}
@@ -130,15 +126,11 @@ function KPIView({ onBack }) {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'auto',
-          maxHeight: 'calc(100% - 80px)',
         }}
       >
         {/* KPI Table */}
         {viewMode === 'kpi' && kpiData ? (
-          <Box sx={{ width: '100%', maxHeight: '100%', overflow: 'auto' }}>
+          <Box sx={{ width: '100%'}}>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -150,6 +142,10 @@ function KPIView({ onBack }) {
                 </TableHead>
                 <TableBody>
                   {Object.entries(kpiData).map(([kpiKey, value]) => {
+                    // Omit KPIs that are not mapped to display names
+                    if (! kpiMap[kpiKey]) {
+                      return;
+                    }
                     const displayName = kpiMap[kpiKey]?.name || kpiKey;
                     const displayUnit = kpiMap[kpiKey]?.unit || "";
 
@@ -175,7 +171,7 @@ function KPIView({ onBack }) {
           </Box>
         ) : viewMode === 'plotly' && plotData && selectedVariable ? (
           // Timeseries Plot
-          <Box sx={{ width: '100%', overflow: 'auto' }}>
+          <Box sx={{ width: '100%'}}>
             {/* Dropdown for selecting variable */}
             <select
               value={selectedVariable}

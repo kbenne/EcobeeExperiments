@@ -35,15 +35,6 @@ function HvacStatus({ status }) {
   const statusInfo = getStatusInfo();
 
   return (
-    <Paper 
-      elevation={2}
-      sx={{
-        p: 3,
-        borderRadius: 2,
-        width: '100%',
-        bgcolor: 'background.paper'
-      }}
-    >
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
@@ -65,7 +56,6 @@ function HvacStatus({ status }) {
           </Typography>
         </Box>
       </Box>
-    </Paper>
   );
 }
 
