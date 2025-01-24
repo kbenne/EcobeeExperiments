@@ -65,6 +65,18 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
     }
   };
 
+  const handleViewKPIs = async () => {
+    try {
+      // Signal the Flask server to pause
+      await axios.post('http://127.0.0.1:5000/api/pause_simulation');
+      // Then go back to SetupView
+      onShowKPI();
+    } catch (error) {
+      console.error('Error showing KPIs:', error);
+      alert('Failed to show KPIs!');
+    }
+  };
+
   return (
     <>
       {/* Loading Spinner */}
@@ -201,7 +213,7 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
           <Button
             variant="contained"
             startIcon={<BarChartIcon />}
-            onClick={onShowKPI}
+            onClick={handleViewKPIs}
             size="large"
             sx={{
               borderRadius: 2,

@@ -158,6 +158,7 @@ class SerialIO:
 # -------------------
 simulation_thread = None
 stop_simulation_flag = False
+pause_simulation_flag = False
 serialio = None
 testid = None
 
@@ -207,7 +208,7 @@ def run_simulation():
       4. Set step size
       5. Enter main while loop
     """
-    global serialio, testid, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE, simulation_ready
+    global serialio, testid, pause_simulation_flag, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE, simulation_ready
     try:
         # 1. Start serial
         print('Starting serial connection...')
@@ -251,7 +252,9 @@ def run_simulation():
         # 5. Main control loop
         simulation_ready = True
         while response.status_code == 200 and not stop_simulation_flag:
-            if time.time() - t >= ADVANCE_INTERVAL:
+            if pause_simulation_flag:
+                continue
+            elif time.time() - t >= ADVANCE_INTERVAL:
                 t = t + ADVANCE_INTERVAL
                 dt = dt + timedelta(seconds=STEP_SIZE)
                 pretty_dt = dt.strftime("%A, %B %d, %Y %H:%M:%S")
@@ -307,7 +310,7 @@ def run_simulation():
 
 @app.route('/api/start_simulation', methods=['POST'])
 def start_simulation():
-    global simulation_thread, stop_simulation_flag, start_seconds, start_datetime, STEP_SIZE
+    global simulation_thread, pause_simulation_flag, stop_simulation_flag, start_seconds, start_datetime, STEP_SIZE
 
     data = request.get_json()
     preset_scenario = data.get('presetScenario')  # Check for preset scenarios
@@ -340,6 +343,7 @@ def start_simulation():
 
     # Start a new simulation
     stop_simulation_flag = False
+    pause_simulation_flag = False
     simulation_thread = threading.Thread(target=run_simulation, daemon=True)
     simulation_thread.start()
     return jsonify({"message": "Simulation started"}), 200
@@ -353,6 +357,24 @@ def stop_simulation():
     global stop_simulation_flag
     stop_simulation_flag = True
     return jsonify({"message": "Stop signal sent"}), 200
+
+@app.route('/api/pause_simulation', methods=['POST'])
+def pause_simulation():
+    """
+    Optional endpoint to signal the simulation loop to stop advancing, but stay alive.
+    """
+    global pause_simulation_flag
+    pause_simulation_flag = True
+    return jsonify({"message": "Pause signal sent"}), 200
+
+@app.route('/api/resume_simulation', methods=['POST'])
+def resume_simulation():
+    """
+    Optional endpoint to signal the simulation loop to stop advancing, but stay alive.
+    """
+    global pause_simulation_flag
+    pause_simulation_flag = False
+    return jsonify({"message": "Resume signal sent"}), 200
 
 # Only run the Flask server if this file is called directly:
 # We no longer do the entire simulation in the main block;
