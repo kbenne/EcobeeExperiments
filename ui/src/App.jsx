@@ -95,7 +95,7 @@ function App() {
               }}
             >
               <Typography variant="h4" sx={{ fontWeight: 'bold', m: 0 }}>
-                Home Energy Simulation
+                Control Hardware in the Loop with Building Energy Modeling (CHIL BEM)
               </Typography>
             </Box>
 

@@ -58,10 +58,11 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
       // Signal the Flask server to stop
       await axios.post('http://127.0.0.1:5000/api/stop_simulation');
       // Then go back to SetupView
-      onBack();
     } catch (error) {
       console.error('Error stopping simulation:', error);
       alert('Failed to stop simulation!');
+    } finally {
+      onBack();
     }
   };
 

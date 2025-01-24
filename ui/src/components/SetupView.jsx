@@ -10,7 +10,7 @@ import { useState } from 'react';
 import axios from 'axios';
 
 function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, maxDate }) {
-  const [stepSize, setStepSize] = useState(10); // Default step size is 10
+  const [timeMultiplier, setTimeMultiplier] = useState(15); // Default step size is 10
   const [selectedOption, setSelectedOption] = useState('custom'); // 'custom' or 'preset'
   const [presetScenario, setPresetScenario] = useState(null); // 'summer' or 'winter'
 
@@ -20,7 +20,7 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
         selectedOption === 'custom'
           ? {
               selectedDateTime: selectedDateTime.toISOString(),
-              stepSize: stepSize,
+              timeMultiplier: timeMultiplier,
             }
           : {
               presetScenario: presetScenario,
@@ -36,8 +36,8 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
     }
   };
 
-  const handleStepSizeChange = (event, newValue) => {
-    setStepSize(newValue);
+  const handleTimeMultiplierChange = (event, newValue) => {
+    setTimeMultiplier(newValue);
   };
 
   return (
@@ -139,13 +139,13 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
                 color: selectedOption === 'custom' ? 'text.primary' : 'text.disabled',
               }}
             >
-              Time Warp Factor: {stepSize}
+              Time Warp Factor: {timeMultiplier}
             </Typography>
             <Slider
-              value={stepSize}
-              onChange={handleStepSizeChange}
+              value={timeMultiplier}
+              onChange={handleTimeMultiplierChange}
               min={1}
-              max={10}
+              max={15}
               step={1}
               valueLabelDisplay="auto"
               sx={{ width: '80%' }}

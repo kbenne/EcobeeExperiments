@@ -17,14 +17,11 @@ boptest_host = os.getenv('HIL_BOPTEST_HOST', '127.0.0.1')
 testcase_id = os.getenv('HIL_TESTCASE_ID', '31383')
 serial_port = os.getenv('HIL_SERIAL_PORT', '/dev/ttyS4')
 
-STEP_SIZE = 10.0
-TIME_SCALER = 15.0
 ON = 1
 OFF = 0
 fan_status = 0
 heating_status = 0
 cooling_status = 0
-ADVANCE_INTERVAL = STEP_SIZE / TIME_SCALER
 baudrate = 115200
 simulation_ready = False
 
@@ -200,7 +197,7 @@ def get_kpi():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def run_simulation():
+def run_simulation(time_multiplier):
     """
       1. Start serial
       2. Select test case
@@ -208,8 +205,11 @@ def run_simulation():
       4. Set step size
       5. Enter main while loop
     """
-    global serialio, testid, pause_simulation_flag, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, STEP_SIZE, simulation_ready
+    global serialio, testid, pause_simulation_flag, stop_simulation_flag, latest_zone_temp_kelvin, latest_oa_temp_kelvin, dt, simulation_ready
     try:
+        advance_interval = 1.0
+        step_size = advance_interval * time_multiplier
+
         # 1. Start serial
         print('Starting serial connection...')
         serialio = SerialIO(serial_port, baudrate)
@@ -242,7 +242,7 @@ def run_simulation():
             url=f"http://{boptest_host}/step/{testid}",
             headers={"Content-Type": "application/json; charset=utf-8"},
             data=json.dumps({
-                "step": STEP_SIZE,
+                "step": step_size,
             })
         )
 
@@ -254,9 +254,9 @@ def run_simulation():
         while response.status_code == 200 and not stop_simulation_flag:
             if pause_simulation_flag:
                 continue
-            elif time.time() - t >= ADVANCE_INTERVAL:
-                t = t + ADVANCE_INTERVAL
-                dt = dt + timedelta(seconds=STEP_SIZE)
+            elif time.time() - t >= advance_interval:
+                t = t + advance_interval
+                dt = dt + timedelta(seconds=step_size)
                 pretty_dt = dt.strftime("%A, %B %d, %Y %H:%M:%S")
                 print(pretty_dt)
 
@@ -310,13 +310,12 @@ def run_simulation():
 
 @app.route('/api/start_simulation', methods=['POST'])
 def start_simulation():
-    global simulation_thread, pause_simulation_flag, stop_simulation_flag, start_seconds, start_datetime, STEP_SIZE
+    global simulation_thread, pause_simulation_flag, stop_simulation_flag, start_seconds, start_datetime 
 
     data = request.get_json()
     preset_scenario = data.get('presetScenario')  # Check for preset scenarios
-    step_size = data.get('stepSize', STEP_SIZE)  # Default to current STEP_SIZE if not provided
+    time_multiplier = data.get('timeMultiplier', 15.0)
 
-    STEP_SIZE = step_size
     if preset_scenario:
         if preset_scenario not in scenarios:
             return jsonify({"message": f"Invalid scenario: {preset_scenario}"}), 400
@@ -344,7 +343,7 @@ def start_simulation():
     # Start a new simulation
     stop_simulation_flag = False
     pause_simulation_flag = False
-    simulation_thread = threading.Thread(target=run_simulation, daemon=True)
+    simulation_thread = threading.Thread(target=run_simulation, args=(time_multiplier,), daemon=True)
     simulation_thread.start()
     return jsonify({"message": "Simulation started"}), 200
 
