@@ -56,20 +56,16 @@ function App() {
   const minDate = dayjs().startOf('year');
   const maxDate = dayjs().endOf('year');
 
-  const handleStart = () => {
+  const showSession = () => {
     setCurrentView('session');
   };
 
-  const handleBack = () => {
+  const showSetup = () => {
     setCurrentView('setup');
   };
 
-  const handleShowKPI = () => {
+  const showKPIs = () => {
     setCurrentView('kpi');
-  };
-
-  const handleBackToSession = () => {
-    setCurrentView('setup');;
   };
 
   return (
@@ -123,7 +119,7 @@ function App() {
                     <SetupView
                       selectedDateTime={selectedDateTime}
                       setSelectedDateTime={setSelectedDateTime}
-                      onStart={handleStart}
+                      onStart={showSession}
                       minDate={minDate}
                       maxDate={maxDate}
                     />
@@ -131,11 +127,11 @@ function App() {
                   {currentView === 'session' && (
                     <SessionView
                       selectedDateTime={selectedDateTime}
-                      onBack={handleBack}
-                      onShowKPI={handleShowKPI}
+                      onBack={showSetup}
+                      onShowKPI={showKPIs}
                     />
                   )}
-                  {currentView === 'kpi' && <KPIView onBack={handleBackToSession} />}
+                  {currentView === 'kpi' && <KPIView onBack={showSetup} />}
                 </CardContent>
               </Card>
             </Box>

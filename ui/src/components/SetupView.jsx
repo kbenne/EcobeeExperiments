@@ -6,6 +6,8 @@ import Slider from '@mui/material/Slider';
 import Box from '@mui/material/Box';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useState } from 'react';
 import axios from 'axios';
 
@@ -13,10 +15,27 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
   const [timeMultiplier, setTimeMultiplier] = useState(15); // Default step size is 10
   const [selectedOption, setSelectedOption] = useState('custom'); // 'custom' or 'preset'
   const [presetScenario, setPresetScenario] = useState(null); // 'summer' or 'winter'
+  const [loading, setLoading] = useState(false); // Loading state
+
+  const checkSimulationReady = async () => {
+    const response = await axios.get('http://127.0.0.1:5000/sim_ready');
+    if (response.data.simulationReady) {
+      setLoading(false);
+      // onStart will move to the SessionView
+      onStart();
+    } else {
+      setTimeout(checkSimulationReady, 1000); // Retry after 1 second
+    }
+  };
 
   const handleStartSimulation = async () => {
     try {
-      const payload =
+      setLoading(true);
+
+      // We don't expect a running simultion here, but just in case...
+      await axios.post('http://127.0.0.1:5000/api/stop_simulation');
+
+      const simulation_options =
         selectedOption === 'custom'
           ? {
               selectedDateTime: selectedDateTime.toISOString(),
@@ -26,13 +45,13 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
               presetScenario: presetScenario,
             };
 
-      await axios.post('http://127.0.0.1:5000/api/start_simulation', payload);
+      await axios.post('http://127.0.0.1:5000/api/start_simulation', simulation_options);
 
-      // If successful, move to the next view
-      onStart();
+      checkSimulationReady();
     } catch (error) {
       console.error('Error starting simulation:', error);
       alert('Failed to start simulation!');
+      setLoading(false);
     }
   };
 
@@ -51,6 +70,11 @@ function SetupView({ selectedDateTime, setSelectedDateTime, onStart, minDate, ma
         p: 3,
       }}
     >
+      {/* Loading Spinner */}
+      <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
       {/* Instructional text */}
       <Box
         sx={{

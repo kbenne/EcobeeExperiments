@@ -9,47 +9,30 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import Temperature from './Temperature';
 import HvacStatus from './HvacStatus';
 import Paper from '@mui/material/Paper';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
 
 function SessionView({ selectedDateTime, onBack, onShowKPI }) {
-  const [indoorTemp, setIndoorTemp] = useState(72.5);
-  const [outdoorTemp, setOutdoorTemp] = useState(68.0);
+  const [indoorTemp, setIndoorTemp] = useState(72.0);
+  const [outdoorTemp, setOutdoorTemp] = useState(72.0);
   const [currentDateTime, setCurrentDateTime] = useState(dayjs(selectedDateTime));
   const [hvacStatus, setHvacStatus] = useState('Off'); // Default to "Off"
   const [loading, setLoading] = useState(true); // Loading state
 
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/sim_data');
+      const data = await response.json();
+      setOutdoorTemp(data.outdoorTemp);
+      setIndoorTemp(data.indoorTemp);
+      setCurrentDateTime(dayjs(data.currentDateTime));
+      setHvacStatus(data.hvacStatus);
+    } catch (error) {
+      console.error('Error fetching temperature:', error);
+    }
+  };
+
   useEffect(() => {
-    const checkSimulationReady = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:5000/sim_ready');
-        if (response.data.simulationReady) {
-          setLoading(false);
-        } else {
-          setTimeout(checkSimulationReady, 1000); // Retry after 1 second
-        }
-      } catch (error) {
-        console.error('Error checking simulation readiness:', error);
-      }
-    };
-
-    checkSimulationReady();
-
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/sim_data');
-        const data = await response.json();
-        setOutdoorTemp(data.outdoorTemp);
-        setIndoorTemp(data.indoorTemp);
-        setCurrentDateTime(dayjs(data.currentDateTime));
-        setHvacStatus(data.hvacStatus);
-      } catch (error) {
-        console.error('Error fetching temperature:', error);
-      }
-    };
-
+    fetchData();
     const intervalId = setInterval(fetchData, 1000); // Fetch every second
-
     return () => clearInterval(intervalId);
   }, []);
 
@@ -80,11 +63,6 @@ function SessionView({ selectedDateTime, onBack, onShowKPI }) {
 
   return (
     <>
-      {/* Loading Spinner */}
-      <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-
       {/* Parent Box occupies the entire area (height is 540px due to 60px header). */}
       <Box
         sx={{
